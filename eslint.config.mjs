@@ -25,6 +25,16 @@ const config = [
   prettierConfigRecommended,
   ...twlint.configs["flat/recommended"],
   {
+    rules: {
+      "prettier/prettier": [
+        "error",
+        {
+          endOfLine: "auto",
+        },
+      ],
+    },
+  },
+  {
     ignores: [".next/**"],
   },
 ];
