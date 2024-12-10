@@ -1,13 +1,15 @@
 "use client";
 import { signIn } from "next-auth/react";
+import { Button } from "@/components/ui/button";
 
 export default function Login() {
   return (
-    <button
+    <Button
       onClick={() => signIn("keycloak")}
-      className="rounded-full bg-sky-500 px-5 py-2 text-sm font-semibold leading-5 text-white hover:bg-sky-700"
+      variant="ghost"
+      className="border-white text-white hover:bg-blue-700 hover:text-white"
     >
-      SignIn with Keycloak
-    </button>
+      Đăng nhập
+    </Button>
   );
 }

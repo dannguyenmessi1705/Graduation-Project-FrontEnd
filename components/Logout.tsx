@@ -1,13 +1,15 @@
 "use client";
 import federatedLogout from "@/utils/federatedLogout";
+import { Button } from "@/components/ui/button";
 
 export default function Logout() {
   return (
-    <button
+    <Button
       onClick={() => federatedLogout()}
-      className="rounded-full bg-sky-500 px-5 py-2 text-sm font-semibold leading-5 text-white hover:bg-sky-700"
+      variant="ghost"
+      className="border-white text-white hover:bg-blue-700 hover:text-white"
     >
-      SignOut with Keycloak
-    </button>
+      Đăng xuất
+    </Button>
   );
 }

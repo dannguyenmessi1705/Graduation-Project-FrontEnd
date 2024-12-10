@@ -1,5 +1,6 @@
 import { Providers } from "./Providers";
 import SessionGuard from "@/components/SessionGuard";
+import { TopicProvider } from "@/contexts/TopicContext";
 
 import type { Metadata } from "next";
 import localFont from "next/font/local";
@@ -32,7 +33,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers>
-          <SessionGuard>{children}</SessionGuard>
+          <SessionGuard>
+            <TopicProvider>{children}</TopicProvider>
+          </SessionGuard>
         </Providers>
       </body>
     </html>
