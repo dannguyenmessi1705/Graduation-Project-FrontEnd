@@ -36,6 +36,6 @@ export async function votePost(
     if (res.status === 401) {
       throw new Error("Unauthorized: Please log in to vote");
     }
-    throw new Error("Failed to vote");
+    throw new Error("Failed to vote post");
   }
 }
