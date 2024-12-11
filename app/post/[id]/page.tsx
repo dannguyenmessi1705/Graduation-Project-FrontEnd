@@ -9,13 +9,11 @@ import { formatDistanceToNow } from "date-fns";
 import { useTopicContext } from "@/contexts/TopicContext";
 import { useEffect, useState } from "react";
 import type { PostDetailData, CommentData } from "@/model/PostDetailData";
-import { ResponseStatus } from "@/model/ResponseStatus";
-import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { getServerSession } from "next-auth";
-import { votePost } from "@/rest/postApi";
-import { useSession } from "next-auth/react";
+import { apiRequest } from "@/lib/api";
+import { ResponseStatus } from "@/model/ResponseStatus";
+import { useAuth } from "@/contexts/AuthContext";
+import { CreateCommentForm } from "@/components/modal/CreateCommentForm";
 
 type PostDetail = {
   status: ResponseStatus | null;
@@ -27,21 +25,34 @@ type Comment = {
   data: CommentData[] | null;
 };
 
-async function getPostDetail(postId: string): Promise<PostDetail> {
-  const res = await fetch(`http://api.forum.didan.id.vn/forum/posts/${postId}`);
-  if (!res.ok) throw new Error("Failed to fetch post detail");
-  return res.json();
+async function getPostDetail(postId: string): Promise<PostDetailData> {
+  const res = (await apiRequest(
+    `http://api.forum.didan.id.vn/forum/posts/${postId}`
+  )) as PostDetail;
+  return res.data!;
 }
 
 async function getPostComments(
   postId: string,
   page: number = 0
-): Promise<Comment> {
-  const res = await fetch(
+): Promise<CommentData[]> {
+  const res = (await apiRequest(
     `http://api.forum.didan.id.vn/forum/comments/post/${postId}?page=${page}`
+  )) as Comment;
+  return res.data || [];
+}
+
+async function votePost(
+  postId: string,
+  voteType: "up" | "down"
+): Promise<void> {
+  await apiRequest(
+    `http://api.forum.didan.id.vn/forum/posts/votes/add/${postId}?type=${voteType}`,
+    {
+      method: "POST",
+    },
+    true
   );
-  if (!res.ok) throw new Error("Failed to fetch comments");
-  return res.json();
 }
 
 interface PostPageProps {
@@ -52,22 +63,37 @@ interface PostPageProps {
 
 export default function PostPage({ params }: PostPageProps) {
   const { topicName } = useTopicContext();
-  const [post, setPost] = useState<PostDetail | null>(null);
-  const [comments, setComments] = useState<Comment | null>(null);
+  const { handleExpiredToken } = useAuth();
+  const [post, setPost] = useState<PostDetailData | null>(null);
+  const [comments, setComments] = useState<CommentData[] | null>(null);
   const [userVote, setUserVote] = useState<"up" | "down" | null>(null);
   const { toast } = useToast();
-  const { data } = useSession();
 
   useEffect(() => {
-    getPostDetail(params.id).then(setPost);
-    getPostComments(params.id).then(setComments);
-  }, [params.id]);
+    const fetchData = async () => {
+      try {
+        const [postData, commentsData] = await Promise.all([
+          getPostDetail(params.id),
+          getPostComments(params.id),
+        ]);
+        setPost(postData);
+        setComments(commentsData);
+      } catch (error) {
+        if (error instanceof Error && error.message === "TokenExpiredError") {
+          handleExpiredToken();
+        } else {
+          console.error("Failed to fetch thread data:", error);
+        }
+      }
+    };
+    fetchData();
+  }, [params.id, handleExpiredToken]);
 
   const handleVote = async (voteType: "up" | "down") => {
     if (!post) return;
 
     try {
-      await votePost(post!.data!.id, voteType, data?.accessToken);
+      await votePost(post.id, voteType);
 
       setPost((prevPost) => {
         if (!prevPost) return null;
@@ -75,28 +101,42 @@ export default function PostPage({ params }: PostPageProps) {
           ...prevPost,
           totalUpvotes:
             voteType === "up"
-              ? prevPost!.data!.totalUpvotes + 1
-              : prevPost!.data!.totalUpvotes,
+              ? prevPost.totalUpvotes + 1
+              : prevPost.totalUpvotes,
           totalDownvotes:
             voteType === "down"
-              ? prevPost!.data!.totalDownvotes + 1
-              : prevPost!.data!.totalDownvotes
+              ? prevPost.totalDownvotes + 1
+              : prevPost.totalDownvotes,
         };
       });
 
       setUserVote(voteType);
       toast({
         title: "Vote successful",
-        description: `You have ${voteType}voted this thread.`
+        description: `You have ${voteType}voted this thread.`,
       });
     } catch (error) {
-      console.error("Failed to vote:", error);
-      toast({
-        title: "Vote failed",
-        description:
-          "There was an error processing your vote. Please try again.",
-        variant: "destructive"
-      });
+      if (error instanceof Error && error.message === "TokenExpiredError") {
+        handleExpiredToken();
+      } else {
+        console.error("Failed to vote:", error);
+        toast({
+          title: "Vote failed",
+          description:
+            "There was an error processing your vote. Please try again.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  const handleCommentPosted = async () => {
+    // Refresh comments
+    try {
+      const commentsData = await getPostComments(params.id);
+      setComments(commentsData);
+    } catch (error) {
+      console.error("Failed to refresh comments:", error);
     }
   };
 
@@ -115,10 +155,7 @@ export default function PostPage({ params }: PostPageProps) {
               Đại sảnh
             </a>
             <span>›</span>
-            <a
-              href={`/topics/${post.data!.topicId}`}
-              className="hover:text-blue-600"
-            >
+            <a href={`/topics/${post.topicId}`} className="hover:text-blue-600">
               {topicName}
             </a>
           </nav>
@@ -130,7 +167,7 @@ export default function PostPage({ params }: PostPageProps) {
           >
             bài viết
           </Badge>
-          <h1 className="text-2xl font-bold">{post.data!.title}</h1>
+          <h1 className="text-2xl font-bold">{post.title}</h1>
         </div>
       </div>
 
@@ -139,25 +176,23 @@ export default function PostPage({ params }: PostPageProps) {
           <div className="flex gap-4">
             <Avatar className="size-12">
               <AvatarImage
-                src={`https://avatar.vercel.sh/${post.data!.author.username}`}
+                src={`https://avatar.vercel.sh/${post.author.username}`}
               />
               <AvatarFallback>
-                {post.data!.author.username[0].toUpperCase()}
+                {post.author.username[0].toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
               <div className="mb-2 flex items-center gap-2">
-                <span className="font-medium">
-                  {post.data!.author.username}
-                </span>
+                <span className="font-medium">{post.author.username}</span>
                 <span className="text-sm text-muted-foreground">
-                  {formatDistanceToNow(new Date(post.data!.createdAt))} ago
+                  {formatDistanceToNow(new Date(post.createdAt))} ago
                 </span>
               </div>
               <div className="prose max-w-none">
-                <p className="whitespace-pre-line">{post.data!.content}</p>
-                {post.data!.fileAttachments.map((file, index) => (
-                  <Image
+                <p className="whitespace-pre-line">{post.content}</p>
+                {post.fileAttachments.map((file, index) => (
+                  <img
                     key={index}
                     src={file}
                     alt={`Attachment ${index + 1}`}
@@ -171,18 +206,18 @@ export default function PostPage({ params }: PostPageProps) {
                   onClick={() => handleVote("up")}
                 >
                   <ThumbsUp className="size-4" />
-                  {post!.data!.totalUpvotes}
+                  {post!.totalUpvotes}
                 </button>
                 <button
                   className={`flex items-center gap-1 text-sm ${userVote === "down" ? "text-primary" : "text-muted-foreground"} hover:text-primary`}
                   onClick={() => handleVote("down")}
                 >
                   <ThumbsDown className="size-4" />
-                  {post!.data!.totalDownvotes}
+                  {post!.totalDownvotes}
                 </button>
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
                   <MessageSquare className="size-4" />
-                  {post.data!.totalComments} comments
+                  {post.totalComments} comments
                 </div>
               </div>
             </div>
@@ -191,24 +226,42 @@ export default function PostPage({ params }: PostPageProps) {
 
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">
-            Comments ({post.data!.totalComments})
+            Comments ({post.totalComments})
           </h2>
-          {comments?.data && comments.data.length !== 0
-            ? comments!.data!.map((comment) =>
-              comment.replyToCommentId.length === 0 ? (
-                <div key={comment.id}>
-                  <CommentItem comment={comment} />
-                  {comments!
-                    .data!.filter(
-                    (reply) => reply.replyToCommentId === comment.id
-                  )
-                  .map((reply) => (
-                    <CommentItem key={reply.id} comment={reply} isReply />
-                  ))}
-                </div>
-              ) : null
-            )
-            : null}
+
+          <Card className="p-4">
+            <CreateCommentForm
+              postId={post.id}
+              onSuccess={handleCommentPosted}
+            />
+          </Card>
+
+          <div className="space-y-4">
+            {comments && comments.length !== 0
+              ? comments.map((comment) =>
+                  comment.replyToCommentId.length === 0 ? (
+                    <div key={comment.id}>
+                      <CommentItem
+                        comment={comment}
+                        onCommentPosted={handleCommentPosted}
+                      />
+                      {comments
+                        .filter(
+                          (reply) => reply.replyToCommentId === comment.id
+                        )
+                        .map((reply) => (
+                          <CommentItem
+                            key={reply.id}
+                            comment={reply}
+                            onCommentPosted={handleCommentPosted}
+                            isReply
+                          />
+                        ))}
+                    </div>
+                  ) : null
+                )
+              : null}
+          </div>
         </div>
       </div>
     </div>
