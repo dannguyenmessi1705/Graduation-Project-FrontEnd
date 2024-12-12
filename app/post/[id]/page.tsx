@@ -239,7 +239,7 @@ export default function PostPage({ params }: PostPageProps) {
           <div className="space-y-4">
             {comments && comments.length !== 0
               ? comments.map((comment) =>
-                  comment.replyToCommentId.length === 0 ? (
+                  comment.replyToCommentId === null ? (
                     <div key={comment.id}>
                       <CommentItem
                         comment={comment}
