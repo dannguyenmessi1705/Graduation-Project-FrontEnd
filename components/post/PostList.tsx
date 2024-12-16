@@ -13,7 +13,7 @@ interface postListItemProps {
 
 export function PostList({ post, views = 0 }: postListItemProps) {
   return (
-    <Link href={`/post/${post.id}`} className="block">
+    <Link href={`/posts/${post.id}`} className="block">
       <Card className="p-4">
         <div className="flex gap-4">
           <Avatar className="size-10">
@@ -33,7 +33,7 @@ export function PostList({ post, views = 0 }: postListItemProps) {
                 bài viết
               </Badge>
               <Link
-                href={`/post/${post.id}`}
+                href={`/posts/${post.id}`}
                 className="truncate font-medium hover:text-blue-600"
               >
                 {post.title}

@@ -15,12 +15,14 @@ interface CommentItemProps {
   comment: Comment;
   isReply?: boolean;
   onCommentPosted?: () => void;
+  isHighlighted?: boolean;
 }
 
 export function CommentItem({
   comment,
   isReply = false,
   onCommentPosted,
+  isHighlighted = false,
 }: CommentItemProps) {
   const [isReplying, setIsReplying] = useState(false);
   const { toast } = useToast();
@@ -85,7 +87,7 @@ export function CommentItem({
 
   return (
     <div className={`space-y-4 ${isReply ? "ml-12" : ""}`}>
-      <Card className="p-4">
+      <Card className={`p-4 ${isHighlighted ? "border-2 border-primary" : ""}`}>
         <div className="flex gap-4">
           <Avatar className="size-10">
             <AvatarImage

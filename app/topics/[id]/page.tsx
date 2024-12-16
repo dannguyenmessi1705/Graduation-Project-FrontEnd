@@ -67,10 +67,6 @@ export default function Page({ params, searchParams }: TopicPageProps) {
               Forums
             </a>
             <span>›</span>
-            <a href="/topics" className="hover:text-blue-600">
-              Đại sảnh
-            </a>
-            <span>›</span>
             <span>{topicName || "Loading..."}</span>
           </nav>
         </div>
