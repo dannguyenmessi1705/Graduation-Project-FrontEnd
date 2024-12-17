@@ -11,10 +11,11 @@ import { formatDistanceToNow } from "date-fns";
 import { useTopicContext } from "@/contexts/TopicContext";
 import type { PostDetailData, CommentData } from "@/model/PostDetailData";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/api";
+import { apiRequest, getUserDetails } from "@/lib/api";
 import { ResponseStatus } from "@/model/ResponseStatus";
 import { useAuth } from "@/contexts/AuthContext";
 import { CreateCommentForm } from "@/components/modal/CreateCommentForm";
+import Image from "next/image";
 
 type PostDetail = {
   status: ResponseStatus | null;
@@ -56,13 +57,7 @@ async function votePost(
   );
 }
 
-interface PostPageProps {
-  params: {
-    id: string;
-  };
-}
-
-export default function PostPage({ params }: PostPageProps) {
+export default function PostPage() {
   const { id } = useParams();
   const searchParams = useSearchParams();
   const highlightedCommentId = searchParams.get("highlightedCommentId");
@@ -71,6 +66,7 @@ export default function PostPage({ params }: PostPageProps) {
   const [post, setPost] = useState<PostDetailData | null>(null);
   const [comments, setComments] = useState<CommentData[] | null>(null);
   const [userVote, setUserVote] = useState<"up" | "down" | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
   const { toast } = useToast();
   const highlightedCommentRef = useRef<HTMLDivElement>(null);
 
@@ -83,6 +79,8 @@ export default function PostPage({ params }: PostPageProps) {
         ]);
         setPost(postData);
         setComments(commentsData);
+        const authorDetails = await getUserDetails(postData.author.id);
+        setAvatarUrl(authorDetails.data.picture);
       } catch (error) {
         if (error instanceof Error && error.message === "TokenExpiredError") {
           handleExpiredToken();
@@ -156,16 +154,12 @@ export default function PostPage({ params }: PostPageProps) {
   if (!post) return <div>Loading...</div>;
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto px-4 py-8 md:px-8 lg:px-16 xl:px-24">
       <div className="mb-6">
         <div className="mb-2 text-sm text-muted-foreground">
           <nav className="flex gap-2">
             <a href="/" className="hover:text-blue-600">
               Forums
-            </a>
-            <span>›</span>
-            <a href="/topics" className="hover:text-blue-600">
-              Đại sảnh
             </a>
             <span>›</span>
             <a href={`/topics/${post.topicId}`} className="hover:text-blue-600">
@@ -188,9 +182,7 @@ export default function PostPage({ params }: PostPageProps) {
         <Card className="p-6">
           <div className="flex gap-4">
             <Avatar className="size-12">
-              <AvatarImage
-                src={`https://avatar.vercel.sh/${post.author.username}`}
-              />
+              <AvatarImage src={avatarUrl} />
               <AvatarFallback>
                 {post.author.username[0].toUpperCase()}
               </AvatarFallback>
@@ -205,12 +197,18 @@ export default function PostPage({ params }: PostPageProps) {
               <div className="prose max-w-none">
                 <p className="whitespace-pre-line">{post.content}</p>
                 {post.fileAttachments.map((file, index) => (
-                  <img
+                  <div
                     key={index}
-                    src={file}
-                    alt={`Attachment ${index + 1}`}
-                    className="mt-4 max-h-[500px] rounded-lg object-cover"
-                  />
+                    className="relative mt-4 aspect-video overflow-hidden rounded-lg"
+                  >
+                    <Image
+                      src={file}
+                      alt={`Attachment ${index + 1}`}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
+                  </div>
                 ))}
               </div>
               <div className="mt-4 flex items-center gap-4">

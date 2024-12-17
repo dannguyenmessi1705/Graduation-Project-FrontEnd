@@ -9,6 +9,7 @@ import { apiRequest } from "@/lib/api";
 import { ResponseStatus } from "@/model/ResponseStatus";
 import { CreatePostButton } from "@/components/CreatePostButton";
 import { useAuth } from "@/contexts/AuthContext";
+import { Separator } from "@/components/ui/separator";
 
 interface TopicPageProps {
   params: {
@@ -31,7 +32,7 @@ async function getPosts(
   const res = (await apiRequest(
     `http://api.forum.didan.id.vn/forum/posts/topic/${topicId}?type=new&page=${page}`
   )) as Posts;
-  return res.data || [];
+  return res.data ?? [];
 }
 
 export default function Page({ params, searchParams }: TopicPageProps) {
@@ -57,38 +58,40 @@ export default function Page({ params, searchParams }: TopicPageProps) {
   }, [params.id, currentPage, handleExpiredToken]);
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="mb-6">
-        <h1 className="mb-2 text-2xl font-bold">{topicName || "Loading..."}</h1>
-        {isLoggedIn && <CreatePostButton topicId={params.id} />}
-        <div className="text-sm text-muted-foreground">
-          <nav className="flex gap-2">
-            <a href="/" className="hover:text-blue-600">
-              Forums
-            </a>
-            <span>›</span>
-            <span>{topicName || "Loading..."}</span>
-          </nav>
+    <div className="space-y-6">
+      <div className="border-b bg-white">
+        <div className="container mx-auto p-4 sm:px-6 lg:px-8">
+          <div className="space-y-4">
+            <nav className="flex text-sm text-muted-foreground">
+              <a href="/" className="hover:text-blue-600">
+                Forums
+              </a>
+              <span className="mx-2">›</span>
+              <span>{topicName || "Loading..."}</span>
+            </nav>
+            <div className="flex flex-col space-y-4">
+              <h1 className="text-2xl font-bold">
+                {topicName || "Loading..."}
+              </h1>
+              {isLoggedIn && <CreatePostButton topicId={params.id} />}
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="mb-6 space-y-4">
-        {posts.length === 0 || posts === null
-          ? null
-          : posts.map((post) => (
-              <PostList
-                key={post.id}
-                post={post}
-                views={Math.floor(Math.random() * 1000)} // Simulated view count
-              />
-            ))}
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="space-y-4">
+          {posts.length === 0 || posts === null
+            ? null
+            : posts.map((post) => <PostList key={post.id} post={post} />)}
+        </div>
+        <div className="mt-6"></div>
+        <Pagination
+          currentPage={currentPage}
+          totalPages={50} // Hardcoded for example, should come from API
+          baseUrl={`/topics/${params.id}`}
+        />
       </div>
-
-      <Pagination
-        currentPage={currentPage}
-        totalPages={50} // Hardcoded for example, should come from API
-        baseUrl={`/topics/${params.id}`}
-      />
     </div>
   );
 }

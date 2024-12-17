@@ -1,6 +1,7 @@
 import { getJwtToken } from "./auth";
 import { NotificationResponse } from "@/model/NotificationData";
 import { UserDetails } from "@/model/UserData";
+import { TopicData } from "@/model/TopicData";
 
 export async function apiRequest(
   url: string,
@@ -120,5 +121,13 @@ export async function getUserDetails(
 ): Promise<{ data: UserDetails }> {
   return apiRequest(
     `http://api.forum.didan.id.vn/forum/users/detail/${userId}`
+  );
+}
+
+export async function getTopics(
+  page: number = 0
+): Promise<{ data: TopicData[] }> {
+  return apiRequest(
+    `http://api.forum.didan.id.vn/forum/posts/topic/all?page=${page}`
   );
 }

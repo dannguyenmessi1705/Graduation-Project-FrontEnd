@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { ThumbsUp, ThumbsDown, Reply } from "lucide-react";
@@ -9,7 +9,8 @@ import type { CommentData as Comment } from "@/model/PostDetailData";
 import { CreateCommentForm } from "../modal/CreateCommentForm";
 import { Button } from "../ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/api";
+import { apiRequest, getUserDetails } from "@/lib/api";
+import Image from "next/image";
 
 interface CommentItemProps {
   comment: Comment;
@@ -28,11 +29,24 @@ export function CommentItem({
   const { toast } = useToast();
   const [userVote, setUserVote] = useState<"up" | "down" | null>(null);
   const [commentVote, setCommentVote] = useState<Comment | null>(comment);
+  const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
 
   const handleReplySuccess = () => {
     setIsReplying(false);
     onCommentPosted?.();
   };
+
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      try {
+        const userDetails = await getUserDetails(comment.author.id);
+        setAvatarUrl(userDetails.data.picture);
+      } catch (error) {
+        console.error("Failed to fetch user details:", error);
+      }
+    };
+    fetchUserDetails();
+  }, [comment.author.id]);
 
   const handleVote = async (voteType: "up" | "down") => {
     if (!comment) return;
@@ -90,9 +104,7 @@ export function CommentItem({
       <Card className={`p-4 ${isHighlighted ? "border-2 border-primary" : ""}`}>
         <div className="flex gap-4">
           <Avatar className="size-10">
-            <AvatarImage
-              src={`https://avatar.vercel.sh/${comment.author.username}`}
-            />
+            <AvatarImage src={avatarUrl} />
             <AvatarFallback>
               {comment.author.username[0].toUpperCase()}
             </AvatarFallback>
@@ -112,10 +124,12 @@ export function CommentItem({
                     key={index}
                     className="relative aspect-video overflow-hidden rounded-lg border"
                   >
-                    <img
+                    <Image
                       src={file}
                       alt={`Attachment ${index + 1}`}
+                      fill
                       className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
                   </div>
                 ))}

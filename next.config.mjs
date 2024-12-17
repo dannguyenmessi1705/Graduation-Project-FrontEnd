@@ -4,6 +4,15 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   reactStrictMode: false,
+  images: {
+    remotePatterns: [
+      {
+        protocol: "http",
+        hostname: "minio.forum.didan.id.vn",
+        pathname: "/*/*",
+      },
+    ],
+  },
 };
 
 export default nextConfig;

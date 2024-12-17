@@ -12,9 +12,10 @@ export function Pagination({
   totalPages,
   baseUrl,
 }: PaginationProps) {
+  const displayPage = currentPage + 1;
   return (
-    <div className="flex items-center gap-1">
-      {currentPage > 1 && (
+    <div className="flex items-center justify-center gap-1">
+      {displayPage > 1 && (
         <Button variant="outline" size="sm" asChild>
           <Link href={`${baseUrl}?page=${currentPage - 1}`}>Previous</Link>
         </Button>
@@ -26,27 +27,27 @@ export function Pagination({
         if (
           page === 1 ||
           page === totalPages ||
-          (page >= currentPage - 2 && page <= currentPage + 2)
+          (page >= displayPage - 2 && page <= displayPage + 2)
         ) {
           return (
             <Button
               key={page}
-              variant={currentPage === page ? "default" : "outline"}
+              variant={displayPage === page ? "default" : "outline"}
               size="sm"
               asChild
             >
-              <Link href={`${baseUrl}?page=${page}`}>{page}</Link>
+              <Link href={`${baseUrl}?page=${i}`}>{page}</Link>
             </Button>
           );
         }
         // Show ellipsis for gaps
-        if (page === currentPage - 3 || page === currentPage + 3) {
+        if (page === displayPage - 3 || page === displayPage + 3) {
           return <span key={page}>...</span>;
         }
         return null;
       })}
 
-      {currentPage < totalPages && (
+      {displayPage < totalPages && (
         <Button variant="outline" size="sm" asChild>
           <Link href={`${baseUrl}?page=${currentPage + 1}`}>Next</Link>
         </Button>

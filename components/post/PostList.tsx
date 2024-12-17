@@ -1,25 +1,40 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { formatDistanceToNow } from "date-fns";
-import { MessageSquare, ThumbsUp, ThumbsDown } from 'lucide-react'
+import { MessageSquare, ThumbsUp, ThumbsDown } from "lucide-react";
 import Link from "next/link";
 import { PostData } from "@/model/PostData";
+import { getUserDetails } from "@/lib/api";
 
 interface postListItemProps {
   post: PostData;
-  views?: number; // Added since API doesn't provide views
 }
 
-export function PostList({ post, views = 0 }: postListItemProps) {
+export function PostList({ post }: postListItemProps) {
+  const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    const fecthUserDetails = async () => {
+      try {
+        const userDetails = await getUserDetails(post.author.id);
+        setAvatarUrl(userDetails.data.picture);
+      } catch (error) {
+        console.error("Failed to fetch user details:", error);
+      }
+    };
+    fecthUserDetails();
+  }, [post.author.id]);
+
   return (
     <Link href={`/posts/${post.id}`} className="block">
       <Card className="p-4">
         <div className="flex gap-4">
           <Avatar className="size-10">
-            <AvatarImage
-              src={`https://avatar.vercel.sh/${post.author.username}`}
-            />
+            <AvatarImage src={avatarUrl} />
             <AvatarFallback>
               {post.author.username[0].toUpperCase()}
             </AvatarFallback>
@@ -57,11 +72,11 @@ export function PostList({ post, views = 0 }: postListItemProps) {
                 {post.totalComments}
               </div>
               <div className="flex items-center gap-1">
-                <ThumbsUp className="h-4 w-4" />
+                <ThumbsUp className="size-4" />
                 {post.totalUpvotes}
               </div>
               <div className="flex items-center gap-1">
-                <ThumbsDown className="h-4 w-4" />
+                <ThumbsDown className="size-4" />
                 {post.totalDownvotes}
               </div>
               {/*<div className="flex items-center gap-1">*/}
@@ -71,9 +86,7 @@ export function PostList({ post, views = 0 }: postListItemProps) {
             </div>
             <div className="flex items-center gap-2">
               <Avatar className="size-6">
-                <AvatarImage
-                  src={`https://avatar.vercel.sh/${post.author.username}`}
-                />
+                <AvatarImage src={avatarUrl} />
                 <AvatarFallback>
                   {post.author.username[0].toUpperCase()}
                 </AvatarFallback>
