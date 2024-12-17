@@ -191,7 +191,12 @@ export default function PostPage() {
               <div className="mb-2 flex items-center gap-2">
                 <span className="font-medium">{post.author.username}</span>
                 <span className="text-sm text-muted-foreground">
-                  {formatDistanceToNow(new Date(post.createdAt))} ago
+                  {formatDistanceToNow(
+                    new Date(
+                      new Date(post.createdAt).getTime() + 7 * 60 * 60 * 1000
+                    )
+                  )}{" "}
+                  ago
                 </span>
               </div>
               <div className="prose max-w-none">

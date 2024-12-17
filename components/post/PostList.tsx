@@ -62,7 +62,14 @@ export function PostList({ post }: postListItemProps) {
                 {post.author.username}
               </Link>
               <span>•</span>
-              <span>{formatDistanceToNow(new Date(post.createdAt))} ago</span>
+              <span>
+                {formatDistanceToNow(
+                  new Date(
+                    new Date(post.createdAt).getTime() + 7 * 60 * 60 * 1000
+                  )
+                )}{" "}
+                ago
+              </span>
             </div>
           </div>
           <div className="flex min-w-[100px] flex-col items-end gap-2">

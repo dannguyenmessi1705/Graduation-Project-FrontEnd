@@ -113,7 +113,12 @@ export function CommentItem({
             <div className="mb-1 flex items-center gap-2">
               <span className="font-medium">{comment.author.username}</span>
               <span className="text-sm text-muted-foreground">
-                {formatDistanceToNow(new Date(comment.createdAt))} ago
+                {formatDistanceToNow(
+                  new Date(
+                    new Date(comment.createdAt).getTime() + 7 * 60 * 60 * 1000
+                  )
+                )}{" "}
+                ago
               </span>
             </div>
             <p className="whitespace-pre-line text-sm">{comment.content}</p>

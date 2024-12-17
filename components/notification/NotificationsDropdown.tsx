@@ -213,7 +213,12 @@ export function NotificationsDropdown() {
                       {notification.content}
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {formatDistanceToNow(new Date(notification.createdAt))}{" "}
+                      {formatDistanceToNow(
+                        new Date(
+                          new Date(notification.createdAt).getTime() +
+                            7 * 60 * 60 * 1000
+                        )
+                      )}{" "}
                       ago
                     </p>
                   </div>
