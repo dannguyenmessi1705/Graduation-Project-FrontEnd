@@ -106,7 +106,6 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
           title: "Registration successful",
           description: "You have been successfully registered.",
         });
-        login(data.data.access_token); // Assuming the API returns an access token upon successful registration
         onClose();
       } else {
         throw new Error(data.status.message || "Registration failed");

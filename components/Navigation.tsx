@@ -84,14 +84,14 @@ export function Navigation() {
               ) : (
                 <>
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     className="border-white text-white hover:bg-blue-700 hover:text-white"
                     onClick={() => setIsRegisterModalOpen(true)}
                   >
                     Đăng ký
                   </Button>
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     className="border-white text-white hover:bg-blue-700 hover:text-white"
                     onClick={() => setIsLoginModalOpen(true)}
                   >
