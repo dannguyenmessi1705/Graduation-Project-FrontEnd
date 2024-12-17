@@ -1,12 +1,12 @@
 "use client";
 
 import { TopicsList } from "@/components/topic/TopicList";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { getTopics } from "@/lib/api";
 import { TopicData as Topic } from "@/model/TopicData";
 import { useSearchParams } from "next/navigation";
 
-export default function Home() {
+function Page() {
   const [topics, setTopics] = useState<Topic[]>([]);
   const totalPage = 50;
   const searchParams = useSearchParams();
@@ -34,5 +34,13 @@ export default function Home() {
         baseUrl="/"
       />
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense>
+      <Page />
+    </Suspense>
   );
 }
