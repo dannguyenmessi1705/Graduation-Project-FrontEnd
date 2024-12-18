@@ -9,7 +9,6 @@ const nextConfig = {
       {
         protocol: "http",
         hostname: "minio.forum.didan.id.vn",
-        pathname: "/*/*",
       },
     ],
   },

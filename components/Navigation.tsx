@@ -7,7 +7,7 @@ import { LoginModal } from "@/components/modal/LoginModal";
 import { RegisterModal } from "@/components/modal/RegisterModal";
 import { NotificationsDropdown } from "@/components/notification/NotificationsDropdown";
 import { useAuth } from "@/contexts/AuthContext";
-import { Menu, X } from "lucide-react";
+import { Menu, X, User } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export function Navigation() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -26,7 +27,7 @@ export function Navigation() {
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
 
   return (
-    <nav className="bg-[#1e3c5f] text-white">
+    <nav className="bg-[#1e3c5f] text-white dark:bg-gray-800">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <Link href="/" className="text-2xl font-bold">
@@ -36,18 +37,19 @@ export function Navigation() {
             <div className="flex gap-4">
               <Button
                 variant="ghost"
-                className="text-white hover:bg-blue-700 hover:text-white"
+                className="text-white hover:bg-blue-700 hover:text-white dark:hover:bg-gray-700"
               >
                 Forums
               </Button>
               <Button
                 variant="ghost"
-                className="text-white hover:bg-blue-700 hover:text-white"
+                className="text-white hover:bg-blue-700 hover:text-white dark:hover:bg-gray-700"
               >
                 Latests
               </Button>
             </div>
             <div className="flex items-center gap-2">
+              <ThemeToggle />
               {isLoggedIn && <NotificationsDropdown />}
               {isLoggedIn ? (
                 <DropdownMenu>
@@ -76,6 +78,18 @@ export function Navigation() {
                       </div>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href={`/user/${userDetails?.id}`}>
+                        <User className="mr-2 size-4" />
+                        <span>View Profile</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href={`/profile/edit`}>
+                        <User className="mr-2 size-4" />
+                        <span>Edit Profile</span>
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={logout}>
                       Đăng xuất
                     </DropdownMenuItem>
@@ -85,14 +99,14 @@ export function Navigation() {
                 <>
                   <Button
                     variant="ghost"
-                    className="border-white text-white hover:bg-blue-700 hover:text-white"
+                    className="border-white text-white hover:bg-blue-700 hover:text-white dark:hover:bg-gray-700"
                     onClick={() => setIsRegisterModalOpen(true)}
                   >
                     Đăng ký
                   </Button>
                   <Button
                     variant="ghost"
-                    className="border-white text-white hover:bg-blue-700 hover:text-white"
+                    className="border-white text-white hover:bg-blue-700 hover:text-white dark:hover:bg-gray-700"
                     onClick={() => setIsLoginModalOpen(true)}
                   >
                     Đăng nhập
@@ -114,16 +128,19 @@ export function Navigation() {
         <div className="container mx-auto px-4 pb-4 sm:px-6 md:hidden lg:px-8">
           <Button
             variant="ghost"
-            className="mb-2 w-full text-white hover:bg-blue-700 hover:text-white"
+            className="mb-2 w-full text-white hover:bg-blue-700 hover:text-white dark:hover:bg-gray-700"
           >
             Forums
           </Button>
           <Button
             variant="ghost"
-            className="mb-2 w-full text-white hover:bg-blue-700 hover:text-white"
+            className="mb-2 w-full text-white hover:bg-blue-700 hover:text-white dark:hover:bg-gray-700"
           >
             Latests
           </Button>
+          <div className="mb-2 flex justify-center">
+            <ThemeToggle />
+          </div>
           {isLoggedIn ? (
             <>
               <div className="mb-2 flex justify-center">
@@ -144,7 +161,21 @@ export function Navigation() {
               </div>
               <Button
                 variant="ghost"
-                className="w-full border-white text-white hover:bg-blue-700 hover:text-white"
+                className="w-full border-white text-white hover:bg-blue-700 hover:text-white dark:hover:bg-gray-700"
+                asChild
+              >
+                <Link href={`/user/${userDetails?.id}`}>View Profile</Link>
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full border-white text-white hover:bg-blue-700 hover:text-white dark:hover:bg-gray-700"
+                asChild
+              >
+                <Link href="/profile/edit">Edit Profile</Link>
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full border-white text-white hover:bg-blue-700 hover:text-white dark:hover:bg-gray-700"
                 onClick={logout}
               >
                 Đăng xuất
@@ -154,14 +185,14 @@ export function Navigation() {
             <>
               <Button
                 variant="ghost"
-                className="mb-2 w-full border-white text-white hover:bg-blue-700 hover:text-white"
+                className="w-full border-white text-white hover:bg-blue-700 hover:text-white dark:hover:bg-gray-700"
                 onClick={() => setIsRegisterModalOpen(true)}
               >
                 Đăng ký
               </Button>
               <Button
                 variant="ghost"
-                className="w-full border-white text-white hover:bg-blue-700 hover:text-white"
+                className="w-full border-white text-white hover:bg-blue-700 hover:text-white dark:hover:bg-gray-700"
                 onClick={() => setIsLoginModalOpen(true)}
               >
                 Đăng nhập

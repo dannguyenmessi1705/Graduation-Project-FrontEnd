@@ -32,18 +32,18 @@ export function PostList({ post }: postListItemProps) {
   return (
     <Link href={`/posts/${post.id}`} className="block">
       <Card className="p-4">
-        <div className="flex gap-4">
-          <Avatar className="size-10">
-            <AvatarImage src={avatarUrl} />
+        <div className="flex flex-col gap-4 md:flex-row">
+          <Avatar className="hidden size-10 md:block">
+            <AvatarImage src={decodeURIComponent(avatarUrl!)} />
             <AvatarFallback>
               {post.author.username[0].toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1">
-            <div className="mb-1 flex items-center gap-2">
+            <div className="mb-1 flex gap-2">
               <Badge
                 variant="secondary"
-                className="bg-orange-100 text-orange-800 hover:bg-orange-100"
+                className="w-fit bg-orange-100 text-orange-800 hover:bg-orange-100"
               >
                 bài viết
               </Badge>
@@ -54,14 +54,8 @@ export function PostList({ post }: postListItemProps) {
                 {post.title}
               </Link>
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Link
-                href={`/user/${post.author.username}`}
-                className="hover:text-blue-600"
-              >
-                {post.author.username}
-              </Link>
-              <span>•</span>
+            <div className="flex gap-2 text-sm text-muted-foreground">
+              <span className="hidden md:inline">•</span>
               <span>
                 {formatDistanceToNow(
                   new Date(
@@ -72,7 +66,7 @@ export function PostList({ post }: postListItemProps) {
               </span>
             </div>
           </div>
-          <div className="flex min-w-[100px] flex-col items-end gap-2">
+          <div className="mt-2 flex min-w-[100px] items-center gap-4 md:mt-0 md:flex-col md:items-end md:gap-2">
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
                 <MessageSquare className="size-4" />
@@ -86,14 +80,12 @@ export function PostList({ post }: postListItemProps) {
                 <ThumbsDown className="size-4" />
                 {post.totalDownvotes}
               </div>
-              {/*<div className="flex items-center gap-1">*/}
-              {/*  <Eye className="size-4" />*/}
-              {/*  {views}*/}
-              {/*</div>*/}
             </div>
             <div className="flex items-center gap-2">
               <Avatar className="size-6">
-                <AvatarImage src={avatarUrl} />
+                <AvatarImage
+                  src={avatarUrl ? decodeURIComponent(avatarUrl) : ""}
+                />
                 <AvatarFallback>
                   {post.author.username[0].toUpperCase()}
                 </AvatarFallback>

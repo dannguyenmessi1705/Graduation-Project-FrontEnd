@@ -3,20 +3,24 @@
 import { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
-import { ThumbsUp, ThumbsDown, Reply } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Reply, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { CommentData as Comment } from "@/model/PostDetailData";
 import { CreateCommentForm } from "../modal/CreateCommentForm";
 import { Button } from "../ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, getUserDetails } from "@/lib/api";
+import { apiRequest, getUserDetails, deleteComment } from "@/lib/api";
 import Image from "next/image";
+import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface CommentItemProps {
   comment: Comment;
   isReply?: boolean;
   onCommentPosted?: () => void;
   isHighlighted?: boolean;
+  setComment: (comment: Comment) => void;
+  onCommentDeleted: (commentId: string) => void;
 }
 
 export function CommentItem({
@@ -24,12 +28,14 @@ export function CommentItem({
   isReply = false,
   onCommentPosted,
   isHighlighted = false,
+  setComment,
+  onCommentDeleted,
 }: CommentItemProps) {
   const [isReplying, setIsReplying] = useState(false);
   const { toast } = useToast();
   const [userVote, setUserVote] = useState<"up" | "down" | null>(null);
-  const [commentVote, setCommentVote] = useState<Comment | null>(comment);
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
+  const { userDetails } = useAuth();
 
   const handleReplySuccess = () => {
     setIsReplying(false);
@@ -60,7 +66,9 @@ export function CommentItem({
         true
       );
 
-      setCommentVote((prevComment) => {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
+      setComment((prevComment) => {
         if (!prevComment) return null;
         return {
           ...prevComment,
@@ -99,16 +107,41 @@ export function CommentItem({
     }
   };
 
+  const handleDeleteComment = async () => {
+    if (window.confirm("Are you sure you want to delete this comment?")) {
+      try {
+        await deleteComment(comment.id);
+        toast({
+          title: "Comment deleted",
+          description: "Your comment has been successfully deleted.",
+        });
+        onCommentDeleted(comment.id);
+      } catch (error) {
+        console.error("Failed to delete comment:", error);
+        toast({
+          title: "Delete failed",
+          description:
+            "There was an error deleting your comment. Please try again.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
   return (
     <div className={`space-y-4 ${isReply ? "ml-12" : ""}`}>
       <Card className={`p-4 ${isHighlighted ? "border-2 border-primary" : ""}`}>
         <div className="flex gap-4">
-          <Avatar className="size-10">
-            <AvatarImage src={avatarUrl} />
-            <AvatarFallback>
-              {comment.author.username[0].toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          <Link href={`/user/${comment.author.id}`}>
+            <Avatar className="size-10">
+              <AvatarImage
+                src={avatarUrl ? decodeURIComponent(avatarUrl) : ""}
+              />
+              <AvatarFallback>
+                {comment.author.username[0].toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+          </Link>
           <div className="flex-1">
             <div className="mb-1 flex items-center gap-2">
               <span className="font-medium">{comment.author.username}</span>
@@ -130,7 +163,7 @@ export function CommentItem({
                     className="relative aspect-video overflow-hidden rounded-lg border"
                   >
                     <Image
-                      src={file}
+                      src={decodeURIComponent(file)}
                       alt={`Attachment ${index + 1}`}
                       fill
                       className="object-cover"
@@ -146,14 +179,14 @@ export function CommentItem({
                 onClick={() => handleVote("up")}
               >
                 <ThumbsUp className="size-4" />
-                {commentVote!.totalUpvotes}
+                {comment!.totalUpvotes}
               </button>
               <button
                 className={`flex items-center gap-1 text-sm ${userVote === "down" ? "text-primary" : "text-muted-foreground"} hover:text-primary`}
                 onClick={() => handleVote("down")}
               >
                 <ThumbsDown className="size-4" />
-                {commentVote!.totalDownvotes}
+                {comment!.totalDownvotes}
               </button>
               {!isReply && (
                 <Button
@@ -164,6 +197,17 @@ export function CommentItem({
                 >
                   <Reply className="mr-1 size-4" />
                   Reply
+                </Button>
+              )}
+              {userDetails?.id === comment.author.id && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-sm text-muted-foreground hover:text-destructive"
+                  onClick={handleDeleteComment}
+                >
+                  <Trash2 className="mr-1 size-4" />
+                  Delete
                 </Button>
               )}
             </div>

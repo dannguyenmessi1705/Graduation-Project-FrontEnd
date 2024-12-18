@@ -40,20 +40,6 @@ export function TopicItem({ id, name, totalPosts }: TopicItemProps) {
               </div>
             </div>
           </div>
-          {/*<div className="text-right">*/}
-          {/*  <div className="flex items-center gap-2">*/}
-          {/*    <Avatar className="size-8">*/}
-          {/*      <AvatarImage src={lastPost.authorAvatar} />*/}
-          {/*      <AvatarFallback>{lastPost.author[0]}</AvatarFallback>*/}
-          {/*    </Avatar>*/}
-          {/*    <div className="text-sm">*/}
-          {/*      <p className="max-w-[200px] truncate text-muted-foreground">*/}
-          {/*        {lastPost.title}*/}
-          {/*      </p>*/}
-          {/*      <p>{lastPost.timestamp}</p>*/}
-          {/*    </div>*/}
-          {/*  </div>*/}
-          {/*</div>*/}
         </div>
       </Card>
     </Link>

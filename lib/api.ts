@@ -10,7 +10,7 @@ export async function apiRequest(
 ) {
   const token = auth ? getJwtToken() : null;
   const headers = {
-    "Content-Type": "application/json",
+    ...(!(options.body instanceof FormData) && { Accept: "application/json" }),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...options.headers,
   };
@@ -129,5 +129,65 @@ export async function getTopics(
 ): Promise<{ data: TopicData[] }> {
   return apiRequest(
     `http://api.forum.didan.id.vn/forum/posts/topic/all?page=${page}`
+  );
+}
+
+export async function updateUserProfile(
+  formData: FormData
+): Promise<{ data: UserDetails }> {
+  return apiRequest(
+    "http://api.forum.didan.id.vn/forum/users/update",
+    {
+      method: "PUT",
+      body: formData,
+    },
+    true
+  );
+}
+
+export async function revokeVote(
+  type: "post" | "comment",
+  id: string
+): Promise<void> {
+  await apiRequest(
+    `http://api.forum.didan.id.vn/forum/${type}s/votes/revoke/${id}`,
+    {
+      method: "DELETE",
+    },
+    true
+  );
+}
+
+export async function updatePost(
+  postId: string,
+  formData: FormData
+): Promise<void> {
+  await apiRequest(
+    `http://api.forum.didan.id.vn/forum/posts/update/${postId}`,
+    {
+      method: "PUT",
+      body: formData,
+    },
+    true
+  );
+}
+
+export async function deletePost(postId: string): Promise<void> {
+  await apiRequest(
+    `http://api.forum.didan.id.vn/forum/posts/delete/${postId}`,
+    {
+      method: "DELETE",
+    },
+    true
+  );
+}
+
+export async function deleteComment(commentId: string): Promise<void> {
+  await apiRequest(
+    `http://api.forum.didan.id.vn/forum/comments/delete/${commentId}`,
+    {
+      method: "DELETE",
+    },
+    true
   );
 }

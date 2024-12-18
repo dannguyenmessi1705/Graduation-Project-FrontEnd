@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -11,11 +11,14 @@ import { formatDistanceToNow } from "date-fns";
 import { useTopicContext } from "@/contexts/TopicContext";
 import type { PostDetailData, CommentData } from "@/model/PostDetailData";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, getUserDetails } from "@/lib/api";
+import { apiRequest, deletePost, getUserDetails, revokeVote } from "@/lib/api";
 import { ResponseStatus } from "@/model/ResponseStatus";
 import { useAuth } from "@/contexts/AuthContext";
 import { CreateCommentForm } from "@/components/modal/CreateCommentForm";
 import Image from "next/image";
+import Link from "next/link";
+import { EditPostModal } from "@/components/modal/EditPostModal";
+import { Button } from "@/components/ui/button";
 
 type PostDetail = {
   status: ResponseStatus | null;
@@ -57,29 +60,42 @@ async function votePost(
   );
 }
 
+const fetchData = async (postId: string) => {
+  try {
+    const [postData, commentsData] = await Promise.all([
+      getPostDetail(postId as string),
+      getPostComments(postId as string),
+    ]);
+    return { postData, commentsData };
+  } catch (error) {
+    console.error("Failed to fetch thread data:", error);
+    throw error;
+  }
+};
+
 export default function PostPage() {
   const { id } = useParams();
   const searchParams = useSearchParams();
   const highlightedCommentId = searchParams.get("highlightedCommentId");
   const { topicName } = useTopicContext();
-  const { handleExpiredToken } = useAuth();
+  const { handleExpiredToken, userDetails } = useAuth();
   const [post, setPost] = useState<PostDetailData | null>(null);
-  const [comments, setComments] = useState<CommentData[] | null>(null);
+  const [comments, setComments] = useState<CommentData[]>([]);
   const [userVote, setUserVote] = useState<"up" | "down" | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
   const { toast } = useToast();
   const highlightedCommentRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const loadData = async () => {
       try {
-        const [postData, commentsData] = await Promise.all([
-          getPostDetail(id as string),
-          getPostComments(id as string),
-        ]);
-        setPost(postData);
-        setComments(commentsData);
-        const authorDetails = await getUserDetails(postData.author.id);
+        const data = await fetchData(id as string);
+        setPost(data.postData);
+        setComments(data.commentsData);
+
+        const authorDetails = await getUserDetails(data.postData.author.id);
         setAvatarUrl(authorDetails.data.picture);
       } catch (error) {
         if (error instanceof Error && error.message === "TokenExpiredError") {
@@ -89,7 +105,7 @@ export default function PostPage() {
         }
       }
     };
-    fetchData();
+    loadData();
   }, [id, handleExpiredToken]);
 
   useEffect(() => {
@@ -104,28 +120,49 @@ export default function PostPage() {
     if (!post) return;
 
     try {
-      await votePost(post.id, voteType);
-
-      setPost((prevPost) => {
-        if (!prevPost) return null;
-        return {
-          ...prevPost,
-          totalUpvotes:
-            voteType === "up"
-              ? prevPost.totalUpvotes + 1
-              : prevPost.totalUpvotes,
-          totalDownvotes:
-            voteType === "down"
-              ? prevPost.totalDownvotes + 1
-              : prevPost.totalDownvotes,
-        };
-      });
-
-      setUserVote(voteType);
-      toast({
-        title: "Vote successful",
-        description: `You have ${voteType}voted this thread.`,
-      });
+      if (userVote === voteType) {
+        await revokeVote("post", post.id);
+        setPost((prevPost) => {
+          if (!prevPost) return null;
+          return {
+            ...prevPost,
+            totalUpvotes:
+              voteType === "up"
+                ? prevPost.totalUpvotes - 1
+                : prevPost.totalUpvotes,
+            totalDownvotes:
+              voteType === "down"
+                ? prevPost.totalDownvotes - 1
+                : prevPost.totalDownvotes,
+          };
+        });
+        setUserVote(null);
+        toast({
+          title: "Vote revoked",
+          description: `Your ${voteType} vote has been revoked`,
+        });
+      } else {
+        await votePost(post.id, voteType);
+        setPost((prevPost) => {
+          if (!prevPost) return null;
+          return {
+            ...prevPost,
+            totalUpvotes:
+              voteType === "up"
+                ? prevPost.totalUpvotes + 1
+                : prevPost.totalUpvotes,
+            totalDownvotes:
+              voteType === "down"
+                ? prevPost.totalDownvotes + 1
+                : prevPost.totalDownvotes,
+          };
+          setUserVote(voteType);
+          toast({
+            title: "Vote successful",
+            description: `You have ${voteType} voted this thread.`,
+          });
+        });
+      }
     } catch (error) {
       if (error instanceof Error && error.message === "TokenExpiredError") {
         handleExpiredToken();
@@ -151,13 +188,70 @@ export default function PostPage() {
     }
   };
 
+  const handleEditPost = () => {
+    setIsEditModalOpen(true);
+  };
+
+  const handleDeletePost = async () => {
+    if (window.confirm("Are you sure you want to delete this post?")) {
+      try {
+        await deletePost(post!.id);
+        toast({
+          title: "Post deleted",
+          description: "Your post has been deleted.",
+        });
+        router.push(`/topics/${post!.topicId}`);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description:
+            error instanceof Error ? error.message : "Failed to delete post",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  const handleEditSuccess = async () => {
+    try {
+      const { postData, commentsData } = await fetchData(id as string);
+      setPost(postData);
+      setComments(commentsData);
+      toast({
+        title: "Post updated successfully",
+        description: "Your post has been updated.",
+      });
+    } catch (error) {
+      console.error("Failed to refresh thread data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to refresh the thread data. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCommentDeleted = async (commentId: string) => {
+    setComments((prevComments) =>
+      prevComments.filter((c) => c.id !== commentId)
+    );
+    if (post) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
+      setPost((prevPost) => ({
+        ...prevPost,
+        totalComments: prevPost!.totalComments - 1,
+      }));
+    }
+  };
+
   if (!post) return <div>Loading...</div>;
 
   return (
-    <div className="container mx-auto px-4 py-8 md:px-8 lg:px-16 xl:px-24">
-      <div className="mb-6">
+    <div className="container mx-auto p-4 md:p-8 lg:px-16 xl:px-24">
+      <div className="mb-4 md:mb-6">
         <div className="mb-2 text-sm text-muted-foreground">
-          <nav className="flex gap-2">
+          <nav className="flex flex-wrap gap-2">
             <a href="/" className="hover:text-blue-600">
               Forums
             </a>
@@ -167,28 +261,32 @@ export default function PostPage() {
             </a>
           </nav>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Badge
             variant="secondary"
             className="bg-orange-100 text-orange-800 hover:bg-orange-100"
           >
             bài viết
           </Badge>
-          <h1 className="text-2xl font-bold">{post.title}</h1>
+          <h1 className="text-xl font-bold md:text-2xl">{post.title}</h1>
         </div>
       </div>
 
-      <div className="space-y-6">
-        <Card className="p-6">
+      <div className="space-y-4 md:space-y-6">
+        <Card className="p-4 md:p-6">
           <div className="flex gap-4">
-            <Avatar className="size-12">
-              <AvatarImage src={avatarUrl} />
-              <AvatarFallback>
-                {post.author.username[0].toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+            <Link href={`/user/${post.author.id}`}>
+              <Avatar className="size-12">
+                <AvatarImage
+                  src={avatarUrl ? decodeURIComponent(avatarUrl) : ""}
+                />
+                <AvatarFallback>
+                  {post.author.username[0].toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </Link>
             <div className="flex-1">
-              <div className="mb-2 flex items-center gap-2">
+              <div className="mb-2 flex flex-col gap-2 md:flex-row md:items-center">
                 <span className="font-medium">{post.author.username}</span>
                 <span className="text-sm text-muted-foreground">
                   {formatDistanceToNow(
@@ -207,7 +305,7 @@ export default function PostPage() {
                     className="relative mt-4 aspect-video overflow-hidden rounded-lg"
                   >
                     <Image
-                      src={file}
+                      src={decodeURIComponent(file)}
                       alt={`Attachment ${index + 1}`}
                       fill
                       className="object-cover"
@@ -218,23 +316,41 @@ export default function PostPage() {
               </div>
               <div className="mt-4 flex items-center gap-4">
                 <button
-                  className={`flex items-center gap-1 text-sm ${userVote === "up" ? "text-primary" : "text-muted-foreground"} hover:text-primary`}
+                  className={`flex items-center gap-1 text-sm ${userVote === "up" ? "font-bold text-primary" : "text-muted-foreground"} hover:text-primary`}
                   onClick={() => handleVote("up")}
                 >
-                  <ThumbsUp className="size-4" />
+                  <ThumbsUp
+                    className={`size-4 ${userVote === "up" ? "fill-current" : ""}`}
+                  />
                   {post!.totalUpvotes}
                 </button>
                 <button
-                  className={`flex items-center gap-1 text-sm ${userVote === "down" ? "text-primary" : "text-muted-foreground"} hover:text-primary`}
+                  className={`flex items-center gap-1 text-sm ${userVote === "down" ? "font-bold text-primary" : "text-muted-foreground"} hover:text-primary`}
                   onClick={() => handleVote("down")}
                 >
                   <ThumbsDown className="size-4" />
                   {post!.totalDownvotes}
                 </button>
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                  <MessageSquare className="size-4" />
+                  <MessageSquare
+                    className={`size-4 ${userVote === "down" ? "fill-current" : ""}`}
+                  />
                   {post.totalComments} comments
                 </div>
+                {userDetails?.id === post.author.id && (
+                  <>
+                    <Button variant="ghost" size="sm" onClick={handleEditPost}>
+                      Edit
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleDeletePost}
+                    >
+                      Delete
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -268,6 +384,14 @@ export default function PostPage() {
                         comment={comment}
                         onCommentPosted={handleCommentPosted}
                         isHighlighted={comment.id === highlightedCommentId}
+                        setComment={(updatedComment) => {
+                          setComments((prevComments) =>
+                            prevComments.map((c) =>
+                              c.id === updatedComment.id ? updatedComment : c
+                            )
+                          );
+                        }}
+                        onCommentDeleted={handleCommentDeleted}
                       />
                       {comments
                         .filter(
@@ -280,6 +404,16 @@ export default function PostPage() {
                             onCommentPosted={handleCommentPosted}
                             isReply
                             isHighlighted={reply.id === highlightedCommentId}
+                            setComment={(updatedComment) => {
+                              setComments((prevComments) =>
+                                prevComments.map((c) =>
+                                  c.id === updatedComment.id
+                                    ? updatedComment
+                                    : c
+                                )
+                              );
+                            }}
+                            onCommentDeleted={handleCommentDeleted}
                           />
                         ))}
                     </div>
@@ -289,6 +423,17 @@ export default function PostPage() {
           </div>
         </div>
       </div>
+      {post && (
+        <EditPostModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          postId={post.id}
+          initialTitle={post.title}
+          initialContent={post.content}
+          initialFiles={post.fileAttachments}
+          onSuccess={handleEditSuccess}
+        />
+      )}
     </div>
   );
 }

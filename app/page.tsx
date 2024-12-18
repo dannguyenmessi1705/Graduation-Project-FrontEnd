@@ -5,9 +5,11 @@ import { useEffect, useState, Suspense } from "react";
 import { getTopics } from "@/lib/api";
 import { TopicData as Topic } from "@/model/TopicData";
 import { useSearchParams } from "next/navigation";
+import Intro from "@/components/Intro";
 
 function Page() {
   const [topics, setTopics] = useState<Topic[]>([]);
+  const [showIntro, setShowIntro] = useState(true);
   const totalPage = 50;
   const searchParams = useSearchParams();
   const currentPage = Math.max(0, Number(searchParams.get("page") || "0"));
@@ -23,6 +25,18 @@ function Page() {
     };
     fetchTopics();
   }, [currentPage]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowIntro(false);
+    }, 3500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (showIntro) {
+    return <Intro />;
+  }
 
   return (
     <div className="space-y-6">
