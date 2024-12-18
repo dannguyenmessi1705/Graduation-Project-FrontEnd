@@ -384,13 +384,6 @@ export default function PostPage() {
                         comment={comment}
                         onCommentPosted={handleCommentPosted}
                         isHighlighted={comment.id === highlightedCommentId}
-                        setComment={(updatedComment) => {
-                          setComments((prevComments) =>
-                            prevComments.map((c) =>
-                              c.id === updatedComment.id ? updatedComment : c
-                            )
-                          );
-                        }}
                         onCommentDeleted={handleCommentDeleted}
                       />
                       {comments
@@ -404,15 +397,6 @@ export default function PostPage() {
                             onCommentPosted={handleCommentPosted}
                             isReply
                             isHighlighted={reply.id === highlightedCommentId}
-                            setComment={(updatedComment) => {
-                              setComments((prevComments) =>
-                                prevComments.map((c) =>
-                                  c.id === updatedComment.id
-                                    ? updatedComment
-                                    : c
-                                )
-                              );
-                            }}
                             onCommentDeleted={handleCommentDeleted}
                           />
                         ))}

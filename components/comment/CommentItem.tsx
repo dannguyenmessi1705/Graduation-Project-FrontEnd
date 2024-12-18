@@ -19,7 +19,6 @@ interface CommentItemProps {
   isReply?: boolean;
   onCommentPosted?: () => void;
   isHighlighted?: boolean;
-  setComment: (comment: Comment) => void;
   onCommentDeleted: (commentId: string) => void;
 }
 
@@ -28,12 +27,12 @@ export function CommentItem({
   isReply = false,
   onCommentPosted,
   isHighlighted = false,
-  setComment,
   onCommentDeleted,
 }: CommentItemProps) {
   const [isReplying, setIsReplying] = useState(false);
   const { toast } = useToast();
   const [userVote, setUserVote] = useState<"up" | "down" | null>(null);
+  const [commentVote, setCommentVote] = useState<Comment | null>(comment);
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
   const { userDetails } = useAuth();
 
@@ -66,9 +65,7 @@ export function CommentItem({
         true
       );
 
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error
-      setComment((prevComment) => {
+      setCommentVote((prevComment) => {
         if (!prevComment) return null;
         return {
           ...prevComment,
@@ -179,14 +176,14 @@ export function CommentItem({
                 onClick={() => handleVote("up")}
               >
                 <ThumbsUp className="size-4" />
-                {comment!.totalUpvotes}
+                {commentVote!.totalUpvotes}
               </button>
               <button
                 className={`flex items-center gap-1 text-sm ${userVote === "down" ? "text-primary" : "text-muted-foreground"} hover:text-primary`}
                 onClick={() => handleVote("down")}
               >
                 <ThumbsDown className="size-4" />
-                {comment!.totalDownvotes}
+                {commentVote!.totalDownvotes}
               </button>
               {!isReply && (
                 <Button
