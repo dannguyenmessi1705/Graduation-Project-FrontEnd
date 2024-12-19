@@ -9,7 +9,6 @@ import { apiRequest } from "@/lib/api";
 import { ResponseStatus } from "@/model/ResponseStatus";
 import { CreatePostButton } from "@/components/CreatePostButton";
 import { useAuth } from "@/contexts/AuthContext";
-import { Separator } from "@/components/ui/separator";
 
 interface TopicPageProps {
   params: {
@@ -57,10 +56,14 @@ export default function Page({ params, searchParams }: TopicPageProps) {
     fetchPosts();
   }, [params.id, currentPage, handleExpiredToken]);
 
+  const handleNewPost = (newPost: PostData) => {
+    setPosts((prev) => [newPost, ...prev]);
+  };
+
   return (
     <div className="space-y-6">
       <div className="border-b bg-white">
-        <div className="container mx-auto p-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto p-4 dark:bg-gray-800 sm:px-6 lg:px-8">
           <div className="space-y-4">
             <nav className="flex text-sm text-muted-foreground">
               <a href="/" className="hover:text-blue-600">
@@ -73,7 +76,12 @@ export default function Page({ params, searchParams }: TopicPageProps) {
               <h1 className="text-2xl font-bold">
                 {topicName || "Loading..."}
               </h1>
-              {isLoggedIn && <CreatePostButton topicId={params.id} />}
+              {isLoggedIn && (
+                <CreatePostButton
+                  topicId={params.id}
+                  onSuccess={handleNewPost}
+                />
+              )}
             </div>
           </div>
         </div>

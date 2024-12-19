@@ -15,17 +15,20 @@ import { useToast } from "@/hooks/use-toast";
 import { X, Upload, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { getJwtToken } from "@/lib/auth";
+import type { PostData } from "@/model/PostData";
 
 interface CreatePostModalProps {
   isOpen: boolean;
   onClose: () => void;
   topicId: string;
+  onSuccess: (newPost: PostData) => void;
 }
 
 export function CreatePostModal({
   isOpen,
   onClose,
   topicId,
+  onSuccess,
 }: CreatePostModalProps) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -84,6 +87,9 @@ export function CreatePostModal({
         setTitle("");
         setContent("");
         setFiles([]);
+        if (data.data) {
+          onSuccess(data.data);
+        }
       } else {
         throw new Error(data.message || "Failed to create post");
       }
@@ -142,7 +148,7 @@ export function CreatePostModal({
                 htmlFor="files"
                 className="flex cursor-pointer items-center gap-2 rounded-md border px-4 py-2 hover:bg-accent"
               >
-                <Upload className="h-4 w-4" />
+                <Upload className="size-4" />
                 Add Files
               </Label>
               <span className="text-sm text-muted-foreground">
@@ -166,7 +172,7 @@ export function CreatePostModal({
                       onClick={() => removeFile(index)}
                       className="absolute right-2 top-2 rounded-full bg-background/80 p-1 hover:bg-background"
                     >
-                      <X className="h-4 w-4" />
+                      <X className="size-4" />
                     </button>
                   </div>
                 ))}
@@ -178,7 +184,7 @@ export function CreatePostModal({
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isLoading && <Loader2 className="mr-2 size-4 animate-spin" />}
               Create Post
             </Button>
           </div>
