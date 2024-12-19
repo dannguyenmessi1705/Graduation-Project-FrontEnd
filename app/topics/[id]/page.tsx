@@ -9,6 +9,7 @@ import { apiRequest } from "@/lib/api";
 import { ResponseStatus } from "@/model/ResponseStatus";
 import { CreatePostButton } from "@/components/CreatePostButton";
 import { useAuth } from "@/contexts/AuthContext";
+import Link from "next/link";
 
 interface TopicPageProps {
   params: {
@@ -66,9 +67,9 @@ export default function Page({ params, searchParams }: TopicPageProps) {
         <div className="container mx-auto p-4 dark:bg-gray-800 sm:px-6 lg:px-8">
           <div className="space-y-4">
             <nav className="flex text-sm text-muted-foreground">
-              <a href="/" className="hover:text-blue-600">
+              <Link href="/" className="hover:text-blue-600">
                 Forums
-              </a>
+              </Link>
               <span className="mx-2">›</span>
               <span>{topicName || "Loading..."}</span>
             </nav>

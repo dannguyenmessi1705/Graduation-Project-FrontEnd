@@ -275,13 +275,16 @@ export default function PostPage() {
       <div className="mb-4 md:mb-6">
         <div className="mb-2 text-sm text-muted-foreground">
           <nav className="flex flex-wrap gap-2">
-            <a href="/" className="hover:text-blue-600">
+            <Link href="/" className="hover:text-blue-600">
               Forums
-            </a>
+            </Link>
             <span>›</span>
-            <a href={`/topics/${post.topicId}`} className="hover:text-blue-600">
+            <Link
+              href={`/topics/${post.topicId}`}
+              className="hover:text-blue-600"
+            >
               {topicName}
-            </a>
+            </Link>
           </nav>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -297,7 +300,7 @@ export default function PostPage() {
 
       <div className="space-y-4 md:space-y-6">
         <Card className="p-4 md:p-6">
-          <div className="flex gap-4">
+          <div className="flex flex-col gap-4 md:flex-row">
             <Link href={`/user/${post.author.id}`}>
               <Avatar className="size-12">
                 <AvatarImage
@@ -321,7 +324,9 @@ export default function PostPage() {
                 </span>
               </div>
               <div className="prose max-w-none">
-                <p className="whitespace-pre-line">{post.content}</p>
+                <p className="whitespace-pre-line break-words">
+                  {post.content}
+                </p>
                 {post.fileAttachments.map((file, index) => (
                   <div
                     key={index}

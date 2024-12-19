@@ -107,8 +107,8 @@ export function CreatePostModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[600px]">
+        <DialogHeader className="sticky top-0 z-10 bg-background pb-2 pt-4">
           <DialogTitle>Create New Post</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -179,14 +179,16 @@ export function CreatePostModal({
               </div>
             )}
           </div>
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 size-4 animate-spin" />}
-              Create Post
-            </Button>
+          <div className="sticky bottom-0 mt-4 bg-background pb-4 pt-2">
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 size-4 animate-spin" />}
+                Create Post
+              </Button>
+            </div>
           </div>
         </form>
       </DialogContent>

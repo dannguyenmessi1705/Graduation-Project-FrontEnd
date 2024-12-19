@@ -9,5 +9,12 @@ export default function ThemeProvider({
   children,
   ...props
 }: ThemeProviderProps) {
-  return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
+  return (
+    <NextThemesProvider
+      themes={["light", "dark", "lunar-new-year", "system"]}
+      {...props}
+    >
+      {children}
+    </NextThemesProvider>
+  );
 }

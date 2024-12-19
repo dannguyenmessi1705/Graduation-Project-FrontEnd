@@ -1,5 +1,3 @@
-import { ResponseStatus } from "@/model/ResponseStatus";
-
 export interface Author {
   id: string;
   username: string;
