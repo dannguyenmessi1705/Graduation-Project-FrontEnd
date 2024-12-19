@@ -49,7 +49,7 @@ export function BottomNavigation({ className }: BottomNavProps) {
       <div className="flex items-center justify-evenly">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="lg">
               <Menu className="size-6" />
               <span className="sr-only">Recent routes</span>
             </Button>
@@ -63,12 +63,12 @@ export function BottomNavigation({ className }: BottomNavProps) {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Button variant="ghost" size="icon" onClick={handleHome}>
+        <Button variant="ghost" size="lg" onClick={handleHome}>
           <Home className="size-6" />
           <span className="sr-only">Home</span>
         </Button>
 
-        <Button variant="ghost" size="icon" onClick={handleBack}>
+        <Button variant="ghost" size="lg" onClick={handleBack}>
           <ArrowLeft className="size-6" />
           <span className="sr-only">Back</span>
         </Button>
