@@ -9,7 +9,12 @@ import type { CommentData as Comment } from "@/model/PostDetailData";
 import { CreateCommentForm } from "../modal/CreateCommentForm";
 import { Button } from "../ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, getUserDetails, deleteComment } from "@/lib/api";
+import {
+  apiRequest,
+  getUserDetails,
+  deleteComment,
+  revokeVote,
+} from "@/lib/api";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
@@ -20,6 +25,20 @@ interface CommentItemProps {
   onCommentPosted?: () => void;
   isHighlighted?: boolean;
   onCommentDeleted: (commentId: string) => void;
+  handleExpiredToken: () => void;
+}
+
+async function voteComment(
+  commentId: string,
+  voteType: "up" | "down"
+): Promise<void> {
+  await apiRequest(
+    `http://api.forum.didan.id.vn/forum/comments/votes/add/${commentId}?type=${voteType}`,
+    {
+      method: "POST",
+    },
+    true
+  );
 }
 
 export function CommentItem({
@@ -28,6 +47,7 @@ export function CommentItem({
   onCommentPosted,
   isHighlighted = false,
   onCommentDeleted,
+  handleExpiredToken,
 }: CommentItemProps) {
   const [isReplying, setIsReplying] = useState(false);
   const { toast } = useToast();
@@ -57,42 +77,76 @@ export function CommentItem({
     if (!comment) return;
 
     try {
-      await apiRequest(
-        `http://api.forum.didan.id.vn/forum/comments/votes/add/${comment.id}?type=${voteType}`,
-        {
-          method: "POST",
-        },
-        true
-      );
-
-      setCommentVote((prevComment) => {
-        if (!prevComment) return null;
-        return {
-          ...prevComment,
-          totalUpvotes:
-            voteType === "up"
-              ? prevComment.totalUpvotes + 1
-              : prevComment.totalUpvotes,
-          totalDownvotes:
-            voteType === "down"
-              ? prevComment.totalDownvotes + 1
-              : prevComment.totalDownvotes,
-        };
-      });
-
-      setUserVote(voteType);
-      toast({
-        title: "Vote successful",
-        description: `You have ${voteType} voted this thread.`,
-      });
+      if (userVote === voteType) {
+        await revokeVote("comment", comment.id);
+        setCommentVote((prevComment) => {
+          if (!prevComment) return null;
+          return {
+            ...prevComment,
+            totalUpvotes:
+              voteType === "up"
+                ? prevComment.totalUpvotes - 1
+                : prevComment.totalUpvotes,
+            totalDownvotes:
+              voteType === "down"
+                ? prevComment.totalDownvotes - 1
+                : prevComment.totalDownvotes,
+          };
+        });
+        setUserVote(null);
+        toast({
+          title: "Vote revoked",
+          description: `Your ${voteType} vote has been revoked`,
+        });
+      } else {
+        await voteComment(comment.id, voteType);
+        setCommentVote((prevComment) => {
+          if (!prevComment) return null;
+          return {
+            ...prevComment,
+            totalUpvotes:
+              voteType === "up"
+                ? prevComment.totalUpvotes + 1
+                : prevComment.totalUpvotes,
+            totalDownvotes:
+              voteType === "down"
+                ? prevComment.totalDownvotes + 1
+                : prevComment.totalDownvotes,
+          };
+        });
+        setUserVote(voteType);
+        toast({
+          title: "Vote successful",
+          description: `You have ${voteType} voted this thread.`,
+        });
+      }
     } catch (error) {
       console.error("Failed to vote:", error);
       if (error instanceof Error) {
-        toast({
-          title: "Vote failed",
-          description: error.message,
-          variant: "destructive",
-        });
+        if (error.message === "TokenExpiredError") {
+          handleExpiredToken();
+        } else if (error.message === "ApiError") {
+          await revokeVote("comment", comment.id);
+          setCommentVote((prevComment) => {
+            if (!prevComment) return null;
+            return {
+              ...prevComment,
+              totalUpvotes:
+                voteType === "up"
+                  ? prevComment.totalUpvotes - 1
+                  : prevComment.totalUpvotes,
+              totalDownvotes:
+                voteType === "down"
+                  ? prevComment.totalDownvotes - 1
+                  : prevComment.totalDownvotes,
+            };
+          });
+          setUserVote(null);
+          toast({
+            title: "Vote revoked",
+            description: `Your ${voteType} vote has been revoked`,
+          });
+        }
       } else {
         toast({
           title: "Vote failed",

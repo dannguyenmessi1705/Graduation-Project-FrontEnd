@@ -164,8 +164,31 @@ export default function PostPage() {
         });
       }
     } catch (error) {
-      if (error instanceof Error && error.message === "TokenExpiredError") {
-        handleExpiredToken();
+      if (error instanceof Error) {
+        if (error.message === "TokenExpiredError") {
+          handleExpiredToken();
+        } else if (error.message === "ApiError") {
+          await revokeVote("post", post.id);
+          setPost((prevPost) => {
+            if (!prevPost) return null;
+            return {
+              ...prevPost,
+              totalUpvotes:
+                voteType === "up"
+                  ? prevPost.totalUpvotes - 1
+                  : prevPost.totalUpvotes,
+              totalDownvotes:
+                voteType === "down"
+                  ? prevPost.totalDownvotes - 1
+                  : prevPost.totalDownvotes,
+            };
+          });
+          setUserVote(null);
+          toast({
+            title: "Vote revoked",
+            description: `Your ${voteType} vote has been revoked`,
+          });
+        }
       } else {
         console.error("Failed to vote:", error);
         toast({
@@ -385,6 +408,7 @@ export default function PostPage() {
                         onCommentPosted={handleCommentPosted}
                         isHighlighted={comment.id === highlightedCommentId}
                         onCommentDeleted={handleCommentDeleted}
+                        handleExpiredToken={handleExpiredToken}
                       />
                       {comments
                         .filter(
@@ -398,6 +422,7 @@ export default function PostPage() {
                             isReply
                             isHighlighted={reply.id === highlightedCommentId}
                             onCommentDeleted={handleCommentDeleted}
+                            handleExpiredToken={handleExpiredToken}
                           />
                         ))}
                     </div>
