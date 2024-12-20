@@ -163,7 +163,7 @@ export function NotificationsDropdown() {
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
-          <Bell className="size-5 text-white" />
+          <Bell className="lunar-new-year:hover:bg-red-800 text-foreground hover:bg-primary/10 hover:text-primary dark:hover:bg-gray-700" />
           {unreadCount > 0 && (
             <span className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-medium text-white">
               {unreadCount > 99 ? "99+" : unreadCount}

@@ -5,6 +5,15 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import ThemeProvider from "@/components/ThemeProvider";
 import "./globals.css";
 import { BottomNavigation } from "@/components/BottomNavigation";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: {
+    default: "ZForum",
+    template: "%s - ZForum",
+  },
+  description: "A community forum for everyone.",
+};
 
 export default function RootLayout({
   children,

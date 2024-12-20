@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { MessageSquare, Users } from "lucide-react";
 import Link from "next/link";
 import { useTopicContext } from "@/contexts/TopicContext";
+import { motion } from "framer-motion";
 
 interface TopicItemProps {
   id: string | null;
@@ -21,27 +22,31 @@ export function TopicItem({ id, name, totalPosts }: TopicItemProps) {
 
   return (
     <Link href={`/topics/${id}`} className="block" onClick={handleClick}>
-      <Card className="p-4 transition-colors hover:bg-accent">
-        <div className="flex items-center gap-4">
-          <MessageSquare className="size-6 text-blue-500" />
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <h3 className="text-lg font-medium">{name}</h3>
-              {name && <Badge variant="default">Topic</Badge>}
-            </div>
-            <div className="mt-2 flex items-center gap-6 text-sm text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <Users className="size-4" />
-                {totalPosts}
+      <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+        <Card className="p-4 shadow-md transition-colors duration-200 hover:bg-accent hover:shadow-lg">
+          <div className="flex flex-col items-start gap-4 md:flex-row md:items-center">
+            <MessageSquare className="hidden size-6 text-primary md:block" />
+            <div className="flex-1">
+              <div className="flex flex-col gap-2 md:flex-row md:items-center">
+                <h3 className="text-lg font-medium transition-colors duration-200 hover:text-primary">
+                  {name}
+                </h3>
+                {name && <Badge variant="default">Topic</Badge>}
               </div>
-              <div className="flex items-center gap-1">
-                <MessageSquare className="size-4" />
-                {totalPosts}
+              <div className="mt-2 flex flex-col gap-2 text-sm text-muted-foreground md:flex-row md:items-center md:gap-6">
+                <div className="flex items-center gap-1">
+                  <Users className="size-4" />
+                  {totalPosts}
+                </div>
+                <div className="flex items-center gap-1">
+                  <MessageSquare className="size-4" />
+                  {totalPosts}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </Card>
+        </Card>
+      </motion.div>
     </Link>
   );
 }

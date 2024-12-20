@@ -6,6 +6,7 @@ import { getTopics } from "@/lib/api";
 import { TopicData as Topic } from "@/model/TopicData";
 import { useSearchParams } from "next/navigation";
 import Intro from "@/components/Intro";
+import Head from "next/head";
 
 function Page() {
   const [topics, setTopics] = useState<Topic[]>([]);
@@ -39,15 +40,20 @@ function Page() {
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Forum Topics</h1>
-      <TopicsList
-        topics={topics}
-        currentPage={currentPage}
-        totalPages={totalPage}
-        baseUrl="/"
-      />
-    </div>
+    <>
+      <Head>
+        <title>Z&#39;Forum - Home</title>
+      </Head>
+      <div className="space-y-6">
+        <h1 className="text-3xl font-bold">Forum Topics</h1>
+        <TopicsList
+          topics={topics}
+          currentPage={currentPage}
+          totalPages={totalPage}
+          baseUrl="/"
+        />
+      </div>
+    </>
   );
 }
 

@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { LoginModal } from "@/components/modal/LoginModal";
 import { RegisterModal } from "@/components/modal/RegisterModal";
 import { NotificationsDropdown } from "@/components/notification/NotificationsDropdown";
 import { useAuth } from "@/contexts/AuthContext";
-import { Menu, X, User } from "lucide-react";
+import { Menu, X, User, Home, Clock } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ThemeToggle from "@/components/ThemeToggle";
+import { motion } from "framer-motion";
 
 interface NavigationProps {
   className?: string;
@@ -26,31 +27,52 @@ export function Navigation({ className }: NavigationProps) {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const { isLoggedIn, logout, userDetails } = useAuth();
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
-    <nav
-      className={`lunar-new-year:bg-red-700 bg-[#1e3c5f] text-white dark:bg-gray-800 ${className}`}
+    <motion.nav
+      className={`lunar-new-year:bg-red-700 fixed inset-x-0 top-0 z-50 text-white transition-all duration-300 dark:bg-gray-800 ${
+        isScrolled
+          ? "bg-background/70 shadow-md backdrop-blur-md"
+          : "bg-transparent"
+      } ${className}`}
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.5 }}
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
-          <Link href="/" className="text-2xl font-bold">
+          <Link
+            href="/"
+            className="text-2xl font-bold text-primary transition-colors duration-200 hover:text-primary/80"
+          >
             Z&#39;Forum
           </Link>
           <div className="hidden items-center gap-6 md:flex">
             <div className="flex gap-4">
               <Button
                 variant="ghost"
-                className="lunar-new-year:hover:bg-red-800 text-white hover:bg-blue-700 hover:text-white dark:hover:bg-gray-700"
+                className="lunar-new-year:hover:bg-red-800 text-foreground hover:bg-primary/10 hover:text-primary dark:hover:bg-gray-700"
               >
+                <Home className="mr-2 size-4" />
                 <Link href="/">Forums</Link>
               </Button>
               <Button
                 variant="ghost"
-                className="lunar-new-year:hover:bg-red-800 text-white hover:bg-blue-700 hover:text-white dark:hover:bg-gray-700"
+                className="lunar-new-year:hover:bg-red-800 text-foreground hover:bg-primary/10 hover:text-primary dark:hover:bg-gray-700"
               >
+                <Clock className="mr-2 size-4" />
                 <Link href="/latest">Latest</Link>
               </Button>
             </div>
@@ -104,15 +126,15 @@ export function Navigation({ className }: NavigationProps) {
               ) : (
                 <>
                   <Button
-                    variant="ghost"
-                    className="lunar-new-year:hover:bg-red-800 border-white text-white hover:bg-blue-700 hover:text-white dark:hover:bg-gray-700"
+                    variant="outline"
+                    className="lunar-new-year:hover:bg-red-800 border-primary text-foreground hover:bg-primary hover:text-primary-foreground dark:hover:bg-gray-700"
                     onClick={() => setIsRegisterModalOpen(true)}
                   >
                     Đăng ký
                   </Button>
                   <Button
                     variant="ghost"
-                    className="lunar-new-year:hover:bg-red-800 border-white text-white hover:bg-blue-700 hover:text-white dark:hover:bg-gray-700"
+                    className="lunar-new-year:hover:bg-red-800 border-primary text-foreground hover:bg-primary hover:text-primary-foreground dark:hover:bg-gray-700"
                     onClick={() => setIsLoginModalOpen(true)}
                   >
                     Đăng nhập
@@ -131,17 +153,25 @@ export function Navigation({ className }: NavigationProps) {
         </div>
       </div>
       {isMobileMenuOpen && (
-        <div className="container mx-auto px-4 pb-4 sm:px-6 md:hidden lg:px-8">
+        <motion.div
+          className="container mx-auto px-4 pb-4 sm:px-6 md:hidden lg:px-8"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.3 }}
+        >
           <Button
             variant="ghost"
-            className="lunar-new-year:hover:bg-red-800 mb-2 w-full text-white hover:bg-blue-700 hover:text-white dark:hover:bg-gray-700"
+            className="lunar-new-year:hover:bg-red-800 mb-2 w-full text-foreground hover:bg-primary/10 hover:text-primary dark:hover:bg-gray-700"
           >
+            <Home className="mr-2 size-4" />
             <Link href="/">Forums</Link>
           </Button>
           <Button
             variant="ghost"
-            className="lunar-new-year:hover:bg-red-800 mb-2 w-full text-white hover:bg-blue-700 hover:text-white dark:hover:bg-gray-700"
+            className="lunar-new-year:hover:bg-red-800 mb-2 w-full text-foreground hover:bg-primary/10 hover:text-primary dark:hover:bg-gray-700"
           >
+            <Clock className="mr-2 size-4" />
             <Link href="/latest">Latests</Link>
           </Button>
           <div className="mb-2 flex justify-center">
@@ -163,25 +193,27 @@ export function Navigation({ className }: NavigationProps) {
                       userDetails?.username?.[0]?.toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <span className="font-medium">{userDetails?.username}</span>
+                <span className="font-medium text-foreground">
+                  {userDetails?.username}
+                </span>
               </div>
               <Button
-                variant="ghost"
-                className="lunar-new-year:hover:bg-red-800 w-full border-white text-white hover:bg-blue-700 hover:text-white dark:hover:bg-gray-700"
+                variant="outline"
+                className="lunar-new-year:hover:bg-red-800 mb-2 w-full border-primary text-foreground hover:bg-primary hover:text-primary-foreground dark:hover:bg-gray-700"
                 asChild
               >
                 <Link href={`/user/${userDetails?.id}`}>View Profile</Link>
               </Button>
               <Button
-                variant="ghost"
-                className="lunar-new-year:hover:bg-red-800 w-full border-white text-white hover:bg-blue-700 hover:text-white dark:hover:bg-gray-700"
+                variant="outline"
+                className="lunar-new-year:hover:bg-red-800 mb-2 w-full border-primary text-foreground hover:bg-primary hover:text-primary-foreground dark:hover:bg-gray-700"
                 asChild
               >
                 <Link href="/profile/edit">Edit Profile</Link>
               </Button>
               <Button
-                variant="ghost"
-                className="lunar-new-year:hover:bg-red-800 w-full border-white text-white hover:bg-blue-700 hover:text-white dark:hover:bg-gray-700"
+                variant="outline"
+                className="lunar-new-year:hover:bg-red-800 w-full border-primary text-foreground hover:bg-primary hover:text-primary-foreground dark:hover:bg-gray-700"
                 onClick={logout}
               >
                 Đăng xuất
@@ -190,22 +222,22 @@ export function Navigation({ className }: NavigationProps) {
           ) : (
             <>
               <Button
-                variant="ghost"
-                className="lunar-new-year:hover:bg-red-800 w-full border-white text-white hover:bg-blue-700 hover:text-white dark:hover:bg-gray-700"
+                variant="outline"
+                className="lunar-new-year:hover:bg-red-800 mb-2 w-full border-primary text-foreground hover:bg-primary hover:text-primary-foreground dark:hover:bg-gray-700"
                 onClick={() => setIsRegisterModalOpen(true)}
               >
                 Đăng ký
               </Button>
               <Button
-                variant="ghost"
-                className="lunar-new-year:hover:bg-red-800 w-full border-white text-white hover:bg-blue-700 hover:text-white dark:hover:bg-gray-700"
+                variant="outline"
+                className="lunar-new-year:hover:bg-red-800 w-full border-primary text-foreground hover:bg-primary hover:text-primary-foreground dark:hover:bg-gray-700"
                 onClick={() => setIsLoginModalOpen(true)}
               >
                 Đăng nhập
               </Button>
             </>
           )}
-        </div>
+        </motion.div>
       )}
       <LoginModal
         isOpen={isLoginModalOpen}
@@ -215,6 +247,6 @@ export function Navigation({ className }: NavigationProps) {
         isOpen={isRegisterModalOpen}
         onClose={() => setIsRegisterModalOpen(false)}
       />
-    </nav>
+    </motion.nav>
   );
 }

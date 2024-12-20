@@ -1,6 +1,7 @@
 import { TopicItem } from "./TopicItems";
 import { TopicData as Topic } from "@/model/TopicData";
 import { Pagination } from "@/components/Pagination";
+import { motion } from "framer-motion";
 
 interface TopicsListProps {
   topics: Topic[];
@@ -16,11 +17,23 @@ export function TopicsList({
   baseUrl,
 }: TopicsListProps) {
   return (
-    <div className="space-y-6">
+    <motion.div
+      className="space-y-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
       <h2 className="text-2xl font-bold">Đại sảnh</h2>
       <div className="space-y-4">
-        {topics.map((topic) => (
-          <TopicItem key={topic.id} {...topic} />
+        {topics.map((topic, index) => (
+          <motion.div
+            key={topic.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: index * 0.1 }}
+          >
+            <TopicItem key={topic.id} {...topic} />
+          </motion.div>
         ))}
       </div>
       <Pagination
@@ -28,6 +41,6 @@ export function TopicsList({
         totalPages={totalPages}
         baseUrl={baseUrl}
       />
-    </div>
+    </motion.div>
   );
 }
