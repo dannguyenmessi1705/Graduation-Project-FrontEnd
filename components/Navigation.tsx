@@ -145,7 +145,7 @@ export function Navigation({ className }: NavigationProps) {
           </div>
           <Button
             variant="ghost"
-            className="md:hidden"
+            className="lunar-new-year:hover:bg-red-800 text-2xl font-bold text-primary transition-colors duration-200 hover:bg-primary/10 hover:text-primary/80 dark:hover:bg-gray-700 md:hidden"
             onClick={toggleMobileMenu}
           >
             {isMobileMenuOpen ? <X /> : <Menu />}

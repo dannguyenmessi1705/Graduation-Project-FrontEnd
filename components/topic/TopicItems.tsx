@@ -2,7 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { MessageSquare, Users } from "lucide-react";
+import { MessageSquareText, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { useTopicContext } from "@/contexts/TopicContext";
 import { motion } from "framer-motion";
@@ -27,19 +27,22 @@ export function TopicItem({ id, name, totalPosts }: TopicItemProps) {
           <div className="flex flex-col items-start gap-4 md:flex-row md:items-center">
             <MessageSquare className="hidden size-6 text-primary md:block" />
             <div className="flex-1">
+              {name && (
+                <Badge
+                  variant="default"
+                  className="w-fit bg-blue-100 text-blue-800 hover:bg-blue-200"
+                >
+                  Topic
+                </Badge>
+              )}
               <div className="flex flex-col gap-2 md:flex-row md:items-center">
                 <h3 className="text-lg font-medium transition-colors duration-200 hover:text-primary">
                   {name}
                 </h3>
-                {name && <Badge variant="default">Topic</Badge>}
               </div>
               <div className="mt-2 flex flex-col gap-2 text-sm text-muted-foreground md:flex-row md:items-center md:gap-6">
                 <div className="flex items-center gap-1">
-                  <Users className="size-4" />
-                  {totalPosts}
-                </div>
-                <div className="flex items-center gap-1">
-                  <MessageSquare className="size-4" />
+                  <MessageSquareText className="size-4" />
                   {totalPosts}
                 </div>
               </div>

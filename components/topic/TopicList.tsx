@@ -23,7 +23,6 @@ export function TopicsList({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <h2 className="text-2xl font-bold">Đại sảnh</h2>
       <div className="space-y-4">
         {topics.map((topic, index) => (
           <motion.div

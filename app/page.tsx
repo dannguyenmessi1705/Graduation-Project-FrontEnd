@@ -7,6 +7,7 @@ import { TopicData as Topic } from "@/model/TopicData";
 import { useSearchParams } from "next/navigation";
 import Intro from "@/components/Intro";
 import Head from "next/head";
+import { motion } from "framer-motion";
 
 function Page() {
   const [topics, setTopics] = useState<Topic[]>([]);
@@ -44,15 +45,27 @@ function Page() {
       <Head>
         <title>Z&#39;Forum - Home</title>
       </Head>
-      <div className="space-y-6">
-        <h1 className="text-3xl font-bold">Forum Topics</h1>
+      <motion.div
+        className="container mx-auto px-4 py-8"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <motion.h1
+          className="mb-8 text-center text-4xl font-bold text-primary"
+          initial={{ y: -20 }}
+          animate={{ y: 0 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+        >
+          Forum Topics
+        </motion.h1>
         <TopicsList
           topics={topics}
           currentPage={currentPage}
           totalPages={totalPage}
           baseUrl="/"
         />
-      </div>
+      </motion.div>
     </>
   );
 }

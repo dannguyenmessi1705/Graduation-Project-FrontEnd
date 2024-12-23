@@ -213,7 +213,11 @@ export function CommentItem({
                 ago
               </span>
             </div>
-            <p className="whitespace-pre-line text-sm">{comment.content}</p>
+            <div className="prose max-w-none px-1">
+              <p className="whitespace-pre-line break-words text-sm">
+                {comment.content}
+              </p>
+            </div>
             {comment.fileAttachments && comment.fileAttachments.length > 0 && (
               <div className="mt-4 grid grid-cols-2 gap-4">
                 {comment.fileAttachments.map((file, index) => (
@@ -270,7 +274,7 @@ export function CommentItem({
                   onClick={handleDeleteComment}
                 >
                   <Trash2 className="mr-1 size-4" />
-                  Delete
+                  Del
                 </Button>
               )}
             </div>

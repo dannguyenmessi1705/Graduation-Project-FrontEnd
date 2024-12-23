@@ -48,12 +48,12 @@ export function PostList({ post }: postListItemProps) {
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
-              <div className="mb-1 flex gap-2">
+              <div className="mb-2 flex flex-col gap-2 md:flex-row md:items-center">
                 <Badge
                   variant="secondary"
-                  className="w-fit bg-orange-100 text-orange-800 hover:bg-orange-100"
+                  className="w-fit bg-orange-100 text-orange-800 hover:bg-orange-200"
                 >
-                  bài viết
+                  Bài viết
                 </Badge>
                 <Link
                   href={`/posts/${post.id}`}
