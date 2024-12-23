@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { X, Upload, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { updatePost } from "@/lib/api";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface EditPostModalProps {
   isOpen: boolean;
@@ -97,7 +98,13 @@ export function EditPostModal({
         <DialogHeader>
           <DialogTitle>Edit Post</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <motion.form
+          onSubmit={handleSubmit}
+          className="space-y-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
           <div className="space-y-2">
             <Label htmlFor="title">Title</Label>
             <Input
@@ -132,7 +139,7 @@ export function EditPostModal({
               />
               <Label
                 htmlFor="files"
-                className="flex cursor-pointer items-center gap-2 rounded-md border px-4 py-2 hover:bg-accent"
+                className="flex cursor-pointer items-center gap-2 rounded-md border px-4 py-2 transition-colors duration-200 hover:bg-accent"
               >
                 <Upload className="size-4" />
                 Add Files
@@ -141,52 +148,84 @@ export function EditPostModal({
                 {files.length + existingFiles.length} file(s) selected
               </span>
             </div>
-            {existingFiles.length > 0 && (
-              <div className="mt-4 grid grid-cols-2 gap-4">
-                {existingFiles.map((file, index) => (
-                  <div key={index} className="group relative">
-                    <div className="relative aspect-video overflow-hidden rounded-lg border">
-                      <Image
-                        src={decodeURIComponent(file)}
-                        alt={`Existing Attachment ${index + 1}`}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => removeExistingFile(index)}
-                      className="absolute right-2 top-2 rounded-full bg-background/80 p-1 hover:bg-background"
+            <AnimatePresence>
+              {existingFiles.length > 0 && (
+                <motion.div
+                  className="mt-4 grid grid-cols-2 gap-4"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {existingFiles.map((file, index) => (
+                    <motion.div
+                      key={index}
+                      className="group relative"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      transition={{ duration: 0.2 }}
                     >
-                      <X className="size-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-            {files.length > 0 && (
-              <div className="mt-4 grid grid-cols-2 gap-4">
-                {files.map((file, index) => (
-                  <div key={index} className="group relative">
-                    <div className="relative aspect-video overflow-hidden rounded-lg border">
-                      <Image
-                        src={URL.createObjectURL(file)}
-                        alt={file.name}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => removeFile(index)}
-                      className="absolute right-2 top-2 rounded-full bg-background/80 p-1 hover:bg-background"
+                      <div className="relative aspect-video overflow-hidden rounded-lg border">
+                        <Image
+                          src={decodeURIComponent(file)}
+                          alt={`Existing Attachment ${index + 1}`}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <motion.button
+                        type="button"
+                        onClick={() => removeExistingFile(index)}
+                        className="absolute right-2 top-2 rounded-full bg-background/80 p-1 text-foreground transition-colors duration-200 hover:bg-background"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                      >
+                        <X className="size-4" />
+                      </motion.button>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              )}
+              {files.length > 0 && (
+                <motion.div
+                  className="mt-4 grid grid-cols-2 gap-4"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {files.map((file, index) => (
+                    <motion.div
+                      key={index}
+                      className="group relative"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      transition={{ duration: 0.2 }}
                     >
-                      <X className="size-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+                      <div className="relative aspect-video overflow-hidden rounded-lg border">
+                        <Image
+                          src={URL.createObjectURL(file)}
+                          alt={file.name}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <motion.button
+                        type="button"
+                        onClick={() => removeFile(index)}
+                        className="absolute right-2 top-2 rounded-full bg-background/80 p-1 text-foreground transition-colors duration-200 hover:bg-background"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                      >
+                        <X className="size-4" />
+                      </motion.button>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={onClose}>
@@ -197,7 +236,7 @@ export function EditPostModal({
               Update Post
             </Button>
           </div>
-        </form>
+        </motion.form>
       </DialogContent>
     </Dialog>
   );

@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { motion } from "framer-motion";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -77,7 +78,13 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
             Enter your credentials to access your account.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <motion.form
+          onSubmit={handleSubmit}
+          className="space-y-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
           <div className="space-y-2">
             <Label htmlFor="username">Username</Label>
             <Input
@@ -100,7 +107,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? "Logging in..." : "Login"}
           </Button>
-        </form>
+        </motion.form>
       </DialogContent>
     </Dialog>
   );

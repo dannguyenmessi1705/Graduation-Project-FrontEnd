@@ -4,11 +4,13 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { X, Upload, Loader2, Reply } from "lucide-react";
+import { X, Upload, Sparkles, Reply } from "lucide-react";
 import Image from "next/image";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { getJwtToken } from "@/lib/auth";
+import { AnimatePresence, motion } from "framer-motion";
+import { Loading } from "@/components/Loading";
 
 interface CreateCommentFormProps {
   postId: string;
@@ -16,6 +18,8 @@ interface CreateCommentFormProps {
   onSuccess?: () => void;
   onCancel?: () => void;
   className?: string;
+  postTitle?: string;
+  postContent?: string;
 }
 
 export function CreateCommentForm({
@@ -24,10 +28,13 @@ export function CreateCommentForm({
   onSuccess,
   onCancel,
   className = "",
+  postTitle = "",
+  postContent = "",
 }: CreateCommentFormProps) {
   const [content, setContent] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -99,15 +106,65 @@ export function CreateCommentForm({
     }
   };
 
+  const generateAIContent = async () => {
+    setIsGenerating(true);
+    try {
+      const prompt = `Hãy bình luận vui, ngắn gọn cho bài viết có tiêu đề "${postTitle}" với Nội dung "${postContent}"`;
+      const response = await fetch(`/api/chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ input: prompt }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate AI response");
+      }
+
+      const data = await response.json();
+      setContent(data.response);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to generate AI content. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className={`space-y-4 ${className}`}>
+      <div className="flex items-center justify-between">
+        <Label htmlFor="content">Your Comment</Label>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={generateAIContent}
+          disabled={isGenerating}
+        >
+          {isGenerating ? (
+            <Loading size={16} color="primary" />
+          ) : (
+            <>
+              <Sparkles className="mr-2 size-4" />
+              Generate with AI
+            </>
+          )}
+        </Button>
+      </div>
       <Textarea
+        id="content"
         value={content}
         onChange={(e) => setContent(e.target.value)}
         placeholder={
           replyToCommentId ? "Write your reply..." : "Write your comment..."
         }
-        className="min-h-[100px]"
+        className="min-h-[100px] transition-all duration-200 focus:shadow-md"
         required
       />
 
@@ -123,9 +180,9 @@ export function CreateCommentForm({
           />
           <Label
             htmlFor="comment-files"
-            className="flex cursor-pointer items-center gap-2 rounded-md border px-4 py-2 hover:bg-accent"
+            className="flex cursor-pointer items-center gap-2 rounded-md border px-4 py-2 transition-colors duration-200 hover:bg-accent"
           >
-            <Upload className="h-4 w-4" />
+            <Upload className="size-4" />
             Add Images
           </Label>
           <span className="text-sm text-muted-foreground">
@@ -133,29 +190,46 @@ export function CreateCommentForm({
           </span>
         </div>
 
-        {files.length > 0 && (
-          <div className="mt-4 grid grid-cols-2 gap-4">
-            {files.map((file, index) => (
-              <div key={index} className="group relative">
-                <div className="relative aspect-video overflow-hidden rounded-lg border">
-                  <Image
-                    src={URL.createObjectURL(file)}
-                    alt={file.name}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => removeFile(index)}
-                  className="absolute right-2 top-2 rounded-full bg-background/80 p-1 hover:bg-background"
+        <AnimatePresence>
+          {files.length > 0 && (
+            <motion.div
+              className="mt-4 grid grid-cols-2 gap-4"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {files.map((file, index) => (
+                <motion.div
+                  key={index}
+                  className="group relative"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.2 }}
                 >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
+                  <div className="relative aspect-video overflow-hidden rounded-lg border">
+                    <Image
+                      src={URL.createObjectURL(file)}
+                      alt={file.name}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <motion.button
+                    type="button"
+                    onClick={() => removeFile(index)}
+                    className="absolute right-2 top-2 rounded-full bg-background/80 p-1 transition-colors duration-200 hover:bg-background"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <X className="size-4" />
+                  </motion.button>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       <div className="flex justify-end gap-2">
@@ -165,10 +239,11 @@ export function CreateCommentForm({
           </Button>
         )}
         <Button type="submit" disabled={isLoading}>
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {replyToCommentId ? (
+          {isLoading ? (
+            <Loading size={16} color="primary-foreground" />
+          ) : replyToCommentId ? (
             <>
-              <Reply className="mr-2 h-4 w-4" />
+              <Reply className="mr-2 size-4" />
               Reply
             </>
           ) : (

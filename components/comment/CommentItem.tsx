@@ -18,6 +18,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import { motion } from "framer-motion";
 
 interface CommentItemProps {
   comment: Comment;
@@ -180,8 +181,15 @@ export function CommentItem({
   };
 
   return (
-    <div className={`space-y-4 ${isReply ? "ml-12" : ""}`}>
-      <Card className={`p-4 ${isHighlighted ? "border-2 border-primary" : ""}`}>
+    <motion.div
+      className={`space-y-4 ${isReply ? "ml-12" : ""}`}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <Card
+        className={`p-4 ${isHighlighted ? "border-2 border-primary" : ""} transition-all duration-300 hover:shadow-md`}
+      >
         <div className="flex gap-4">
           <Link href={`/user/${comment.author.id}`}>
             <Avatar className="size-10">
@@ -225,25 +233,29 @@ export function CommentItem({
               </div>
             )}
             <div className="mt-4 flex items-center gap-4">
-              <button
-                className={`flex items-center gap-1 text-sm ${userVote === "up" ? "text-primary" : "text-muted-foreground"} hover:text-primary`}
+              <motion.button
+                className={`flex items-center gap-1 text-sm ${userVote === "up" ? "text-primary" : "text-muted-foreground"} transition-colors duration-200 hover:text-primary`}
                 onClick={() => handleVote("up")}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
               >
                 <ThumbsUp className="size-4" />
                 {commentVote!.totalUpvotes}
-              </button>
-              <button
-                className={`flex items-center gap-1 text-sm ${userVote === "down" ? "text-primary" : "text-muted-foreground"} hover:text-primary`}
+              </motion.button>
+              <motion.button
+                className={`flex items-center gap-1 text-sm ${userVote === "down" ? "text-primary" : "text-muted-foreground"} transition-colors duration-200 hover:text-primary`}
                 onClick={() => handleVote("down")}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
               >
                 <ThumbsDown className="size-4" />
                 {commentVote!.totalDownvotes}
-              </button>
+              </motion.button>
               {!isReply && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-sm text-muted-foreground hover:text-primary"
+                  className="text-sm text-muted-foreground transition-colors duration-200 hover:text-primary"
                   onClick={() => setIsReplying(!isReplying)}
                 >
                   <Reply className="mr-1 size-4" />
@@ -254,7 +266,7 @@ export function CommentItem({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-sm text-muted-foreground hover:text-destructive"
+                  className="text-sm text-muted-foreground transition-colors duration-200 hover:text-destructive"
                   onClick={handleDeleteComment}
                 >
                   <Trash2 className="mr-1 size-4" />
@@ -267,15 +279,21 @@ export function CommentItem({
       </Card>
 
       {isReplying && (
-        <div className="ml-12">
+        <motion.div
+          className="ml-12"
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          exit={{ opacity: 0, height: 0 }}
+          transition={{ duration: 0.3 }}
+        >
           <CreateCommentForm
             postId={comment.postId}
             replyToCommentId={comment.id}
             onSuccess={handleReplySuccess}
             onCancel={() => setIsReplying(false)}
           />
-        </div>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 }

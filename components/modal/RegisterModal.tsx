@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
+import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface RegisterModalProps {
@@ -61,7 +61,6 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(1);
   const { toast } = useToast();
-  const { login } = useAuth();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -289,17 +288,23 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
             Create your account to join our community. Step {step} of 3
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <motion.form
+          onSubmit={handleSubmit}
+          className="space-y-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
           {renderStep()}
           <div className="flex justify-between">
             {step > 1 && (
               <Button type="button" onClick={prevStep} variant="outline">
-                <ChevronLeft className="mr-2 h-4 w-4" /> Previous
+                <ChevronLeft className="mr-2 size-4" /> Previous
               </Button>
             )}
             {step < 3 ? (
               <Button type="button" onClick={nextStep} className="ml-auto">
-                Next <ChevronRight className="ml-2 h-4 w-4" />
+                Next <ChevronRight className="ml-2 size-4" />
               </Button>
             ) : (
               <Button type="submit" className="ml-auto" disabled={isLoading}>
@@ -307,7 +312,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
               </Button>
             )}
           </div>
-        </form>
+        </motion.form>
       </DialogContent>
     </Dialog>
   );

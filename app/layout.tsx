@@ -6,6 +6,7 @@ import ThemeProvider from "@/components/ThemeProvider";
 import "./globals.css";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import type { Metadata } from "next";
+import { AIChatButton } from "@/components/modal/AIChatButton";
 
 export const metadata: Metadata = {
   title: {
@@ -33,6 +34,7 @@ export default function RootLayout({
                 </main>
                 <BottomNavigation className="fixed inset-x-0 bottom-0 z-50" />
                 <Toaster />
+                <AIChatButton />
               </div>
             </TopicProvider>
           </AuthProvider>

@@ -19,6 +19,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { EditPostModal } from "@/components/modal/EditPostModal";
 import { Button } from "@/components/ui/button";
+import { AnimatePresence, motion } from "framer-motion";
+import { Loading } from "@/components/Loading";
 
 type PostDetail = {
   status: ResponseStatus | null;
@@ -87,9 +89,11 @@ export default function PostPage() {
   const highlightedCommentRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const loadData = async () => {
+      setIsLoading(true);
       try {
         const data = await fetchData(id as string);
         setPost(data.postData);
@@ -103,6 +107,8 @@ export default function PostPage() {
         } else {
           console.error("Failed to fetch thread data:", error);
         }
+      } finally {
+        setIsLoading(false);
       }
     };
     loadData();
@@ -199,6 +205,14 @@ export default function PostPage() {
         });
       }
     }
+
+    if (isLoading) {
+      return (
+        <div className="flex h-screen items-center justify-center">
+          <Loading size={40} color="primary" />
+        </div>
+      );
+    }
   };
 
   const handleCommentPosted = async () => {
@@ -268,20 +282,44 @@ export default function PostPage() {
     }
   };
 
-  if (!post) return <div>Loading...</div>;
+  if (!post)
+    return (
+      <motion.div
+        className="flex h-64 items-center justify-center"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <Loading size={40} color="primary" />
+      </motion.div>
+    );
 
   return (
-    <div className="container mx-auto p-4 md:p-8 lg:px-16 xl:px-24">
-      <div className="mb-4 md:mb-6">
+    <motion.div
+      className="container mx-auto p-4 md:p-8 lg:px-16 xl:px-24"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <motion.div
+        className="mb-4 md:mb-6"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
         <div className="mb-2 text-sm text-muted-foreground">
           <nav className="flex flex-wrap gap-2">
-            <Link href="/" className="hover:text-blue-600">
+            <Link
+              href="/"
+              className="transition-colors duration-200 hover:text-blue-600"
+            >
               Forums
             </Link>
             <span>›</span>
             <Link
               href={`/topics/${post.topicId}`}
-              className="hover:text-blue-600"
+              className="transition-colors duration-200 hover:text-blue-600"
             >
               {topicName}
             </Link>
@@ -296,9 +334,14 @@ export default function PostPage() {
           </Badge>
           <h1 className="text-xl font-bold md:text-2xl">{post.title}</h1>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="space-y-4 md:space-y-6">
+      <motion.div
+        className="space-y-4 md:space-y-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+      >
         <Card className="p-4 md:p-6">
           <div className="flex flex-col gap-4 md:flex-row">
             <Link href={`/user/${post.author.id}`}>
@@ -343,22 +386,26 @@ export default function PostPage() {
                 ))}
               </div>
               <div className="mt-4 flex items-center gap-4">
-                <button
-                  className={`flex items-center gap-1 text-sm ${userVote === "up" ? "font-bold text-primary" : "text-muted-foreground"} hover:text-primary`}
+                <motion.button
+                  className={`flex items-center gap-1 text-sm ${userVote === "up" ? "font-bold text-primary" : "text-muted-foreground"} transition-colors duration-200 hover:text-primary`}
                   onClick={() => handleVote("up")}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
                 >
                   <ThumbsUp
                     className={`size-4 ${userVote === "up" ? "fill-current" : ""}`}
                   />
                   {post!.totalUpvotes}
-                </button>
-                <button
-                  className={`flex items-center gap-1 text-sm ${userVote === "down" ? "font-bold text-primary" : "text-muted-foreground"} hover:text-primary`}
+                </motion.button>
+                <motion.button
+                  className={`flex items-center gap-1 text-sm ${userVote === "down" ? "font-bold text-primary" : "text-muted-foreground"} transition-colors duration-200 hover:text-primary`}
                   onClick={() => handleVote("down")}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
                 >
                   <ThumbsDown className="size-4" />
                   {post!.totalDownvotes}
-                </button>
+                </motion.button>
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
                   <MessageSquare
                     className={`size-4 ${userVote === "down" ? "fill-current" : ""}`}
@@ -384,7 +431,12 @@ export default function PostPage() {
           </div>
         </Card>
 
-        <div className="space-y-4">
+        <motion.div
+          className="space-y-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+        >
           <h2 className="text-lg font-semibold">
             Comments ({post.totalComments})
           </h2>
@@ -393,50 +445,58 @@ export default function PostPage() {
             <CreateCommentForm
               postId={post.id}
               onSuccess={handleCommentPosted}
+              postContent={post.content}
+              postTitle={post.title}
             />
           </Card>
 
           <div className="space-y-4">
-            {comments && comments.length !== 0
-              ? comments.map((comment) =>
-                  comment.replyToCommentId === null ? (
-                    <div
-                      key={comment.id}
-                      ref={
-                        comment.id === highlightedCommentId
-                          ? highlightedCommentRef
-                          : null
-                      }
-                    >
-                      <CommentItem
-                        comment={comment}
-                        onCommentPosted={handleCommentPosted}
-                        isHighlighted={comment.id === highlightedCommentId}
-                        onCommentDeleted={handleCommentDeleted}
-                        handleExpiredToken={handleExpiredToken}
-                      />
-                      {comments
-                        .filter(
-                          (reply) => reply.replyToCommentId === comment.id
-                        )
-                        .map((reply) => (
-                          <CommentItem
-                            key={reply.id}
-                            comment={reply}
-                            onCommentPosted={handleCommentPosted}
-                            isReply
-                            isHighlighted={reply.id === highlightedCommentId}
-                            onCommentDeleted={handleCommentDeleted}
-                            handleExpiredToken={handleExpiredToken}
-                          />
-                        ))}
-                    </div>
-                  ) : null
-                )
-              : null}
+            <AnimatePresence>
+              {comments && comments.length !== 0
+                ? comments.map((comment) =>
+                    comment.replyToCommentId === null ? (
+                      <motion.div
+                        key={comment.id}
+                        ref={
+                          comment.id === highlightedCommentId
+                            ? highlightedCommentRef
+                            : null
+                        }
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <CommentItem
+                          comment={comment}
+                          onCommentPosted={handleCommentPosted}
+                          isHighlighted={comment.id === highlightedCommentId}
+                          onCommentDeleted={handleCommentDeleted}
+                          handleExpiredToken={handleExpiredToken}
+                        />
+                        {comments
+                          .filter(
+                            (reply) => reply.replyToCommentId === comment.id
+                          )
+                          .map((reply) => (
+                            <CommentItem
+                              key={reply.id}
+                              comment={reply}
+                              onCommentPosted={handleCommentPosted}
+                              isReply
+                              isHighlighted={reply.id === highlightedCommentId}
+                              onCommentDeleted={handleCommentDeleted}
+                              handleExpiredToken={handleExpiredToken}
+                            />
+                          ))}
+                      </motion.div>
+                    ) : null
+                  )
+                : null}
+            </AnimatePresence>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
       {post && (
         <EditPostModal
           isOpen={isEditModalOpen}
@@ -448,6 +508,6 @@ export default function PostPage() {
           onSuccess={handleEditSuccess}
         />
       )}
-    </div>
+    </motion.div>
   );
 }
