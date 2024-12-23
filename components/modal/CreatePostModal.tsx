@@ -24,7 +24,7 @@ interface CreatePostModalProps {
   onClose: () => void;
   topicId: string;
   onSuccess: (newPost: PostData) => void;
-  topicName: string;
+  topicName?: string;
 }
 
 export function CreatePostModal({
