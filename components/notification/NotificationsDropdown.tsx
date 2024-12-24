@@ -28,11 +28,13 @@ import {
   subscribeToNotifications,
 } from "@/lib/websocket";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function NotificationsDropdown() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
+  const [hasNewNotification, setHasNewNotification] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -59,6 +61,7 @@ export function NotificationsDropdown() {
     const unsubscribe = subscribeToNotifications((notification) => {
       setNotifications((prev) => [notification, ...prev]);
       setUnreadCount((prev) => prev + 1);
+      setHasNewNotification(true);
       toast({
         title: notification.title,
         description: notification.content,
@@ -75,6 +78,7 @@ export function NotificationsDropdown() {
     try {
       await markNotificationAsRead(notificationId.toString());
       await fetchNotifications();
+      setHasNewNotification(false);
       toast({
         description: "Notification marked as read",
       });
@@ -91,6 +95,7 @@ export function NotificationsDropdown() {
     try {
       await markAllNotificationsAsRead();
       await fetchNotifications();
+      setHasNewNotification(false);
       toast({
         description: "All notifications marked as read",
       });
@@ -123,6 +128,7 @@ export function NotificationsDropdown() {
     try {
       await deleteAllNotifications();
       await fetchNotifications();
+      setHasNewNotification(false);
       toast({
         description: "All notifications deleted",
       });
@@ -162,13 +168,36 @@ export function NotificationsDropdown() {
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="lunar-new-year:hover:bg-red-800 text-foreground hover:bg-primary/10 hover:text-primary dark:hover:bg-gray-700" />
-          {unreadCount > 0 && (
-            <span className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-medium text-white">
-              {unreadCount > 99 ? "99+" : unreadCount}
-            </span>
-          )}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="lunar-new-year:hover:bg-red-800 relative text-foreground hover:bg-primary/10 hover:text-primary dark:hover:bg-gray-700"
+        >
+          <Bell />
+          <AnimatePresence>
+            {unreadCount > 0 && (
+              <motion.span
+                key="unread-count"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0 }}
+                className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-medium text-white"
+              >
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </motion.span>
+            )}
+          </AnimatePresence>
+          <AnimatePresence>
+            {hasNewNotification && (
+              <motion.span
+                key="new-notification"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0 }}
+                className="absolute -right-1 -top-1 size-3 rounded-full bg-blue-500"
+              />
+            )}
+          </AnimatePresence>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80" align="end">

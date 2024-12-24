@@ -4,15 +4,21 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, X } from "lucide-react";
+import { Sparkles, X, Copy, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loading } from "@/components/Loading";
+import ReactMarkdown from "react-markdown";
 
-export function AIChatButton() {
+interface AIChatProps {
+  initialPrompt?: string;
+}
+
+export function AIChatButton({ initialPrompt = "" }: AIChatProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState(initialPrompt);
   const [response, setResponse] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -46,10 +52,17 @@ export function AIChatButton() {
     }
   };
 
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(response).then(() => {
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    });
+  };
+
   return (
     <>
       <motion.div
-        className="fixed bottom-20 right-10 z-50"
+        className="fixed bottom-20 left-10 z-50"
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: "spring", stiffness: 260, damping: 20 }}
@@ -71,7 +84,7 @@ export function AIChatButton() {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="relative w-full max-w-md rounded-lg bg-card p-6 shadow-lg"
+              className="relative flex max-h-[80vh] w-full max-w-md flex-col rounded-lg bg-card p-6 shadow-lg"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
@@ -88,7 +101,7 @@ export function AIChatButton() {
               <h2 className="mb-4 text-2xl font-bold text-foreground">
                 Chat with AI
               </h2>
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="mb-4 space-y-4">
                 <Textarea
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
@@ -109,13 +122,29 @@ export function AIChatButton() {
                 </Button>
               </form>
               {response && (
-                <div className="mt-4 rounded-lg bg-muted p-4">
-                  <h3 className="mb-2 font-semibold text-foreground">
-                    AI Response:
-                  </h3>
-                  <p className="whitespace-pre-wrap text-sm text-foreground">
-                    {response}
-                  </p>
+                <div className="h-[300px] overflow-scroll">
+                  <div className="relative rounded-lg bg-muted p-4">
+                    <h3 className="mb-2 font-semibold text-foreground">
+                      AI Response:
+                    </h3>
+                    <div className="prose markdown-content max-w-none">
+                      <ReactMarkdown className="w-full overflow-x-auto">
+                        {response}
+                      </ReactMarkdown>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-2 top-2"
+                      onClick={copyToClipboard}
+                    >
+                      {isCopied ? (
+                        <Check className="size-4 text-green-500" />
+                      ) : (
+                        <Copy className="size-4" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
               )}
             </motion.div>

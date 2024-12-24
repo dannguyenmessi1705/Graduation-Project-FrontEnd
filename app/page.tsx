@@ -8,21 +8,26 @@ import { useSearchParams } from "next/navigation";
 import Intro from "@/components/Intro";
 import Head from "next/head";
 import { motion } from "framer-motion";
+import { Loading } from "@/components/Loading";
 
 function Page() {
   const [topics, setTopics] = useState<Topic[]>([]);
   const [showIntro, setShowIntro] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const totalPage = 50;
   const searchParams = useSearchParams();
-  const currentPage = Math.max(0, Number(searchParams.get("page") || "0"));
+  const currentPage = Math.max(0, Number(searchParams.get("page") ?? "0"));
 
   useEffect(() => {
     const fetchTopics = async () => {
+      setIsLoading(true);
       try {
         const fetchedTopics = await getTopics(currentPage);
         setTopics(fetchedTopics.data);
       } catch (error) {
         console.error("Failed to fetch topics:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchTopics();
@@ -38,6 +43,14 @@ function Page() {
 
   if (showIntro) {
     return <Intro />;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loading size={40} color="primary" />
+      </div>
+    );
   }
 
   return (

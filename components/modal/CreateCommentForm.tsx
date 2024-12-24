@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { getJwtToken } from "@/lib/auth";
 import { AnimatePresence, motion } from "framer-motion";
 import { Loading } from "@/components/Loading";
+import { UserDetails as User } from "@/model/UserData";
+import { UserMentionSuggestions } from "@/components/comment/UserMentionSuggestions";
 
 interface CreateCommentFormProps {
   postId: string;
@@ -20,6 +22,7 @@ interface CreateCommentFormProps {
   className?: string;
   postTitle?: string;
   postContent?: string;
+  initialMention?: string;
 }
 
 export function CreateCommentForm({
@@ -30,12 +33,26 @@ export function CreateCommentForm({
   className = "",
   postTitle = "",
   postContent = "",
+  initialMention = "",
 }: CreateCommentFormProps) {
-  const [content, setContent] = useState("");
+  const [content, setContent] = useState(
+    initialMention ? `**@${initialMention}** ` : ""
+  );
   const [files, setFiles] = useState<File[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState("");
+  const [mentionSuggestions, setMentionSuggestions] = useState<User[]>([]);
+  const [mentionStart, setMentionStart] = useState(-1);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (textareaRef.current && initialMention) {
+      textareaRef.current.focus();
+      textareaRef.current.setSelectionRange(content.length, content.length);
+    }
+  }, [initialMention, content.length]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -123,7 +140,7 @@ export function CreateCommentForm({
       }
 
       const data = await response.json();
-      setContent(data.response);
+      setContent((prevContent) => `${prevContent}${data.response}`);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast({
@@ -133,6 +150,57 @@ export function CreateCommentForm({
       });
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleContentChange = async (
+    e: React.ChangeEvent<HTMLTextAreaElement>
+  ) => {
+    const newContent = e.target.value;
+    setContent(newContent);
+
+    const lastAtIndex = newContent.lastIndexOf("@");
+    if (lastAtIndex !== -1 && lastAtIndex < newContent.length - 1) {
+      const query = newContent.slice(lastAtIndex + 1).split(/\s/)[0];
+      if (query.length >= 3) {
+        setMentionQuery(query);
+        setMentionStart(lastAtIndex);
+        try {
+          const response = await fetch(
+            `http://api.forum.didan.id.vn/forum/users/find?keyword=${query}&page=0`
+          );
+          const data = await response.json();
+          setMentionSuggestions(data.data);
+        } catch (error) {
+          console.error("Failed to fetch user suggestions:", error);
+        }
+      } else {
+        setMentionSuggestions([]);
+      }
+    } else {
+      setMentionSuggestions([]);
+    }
+  };
+
+  const handleMentionSelect = (user: User) => {
+    if (mentionStart !== -1) {
+      const beforeMention = content.slice(0, mentionStart);
+      const afterMention = content.slice(
+        mentionStart + mentionQuery.length + 1
+      );
+      const newContent = `${beforeMention}**@${user.username}** ${afterMention}`;
+      setContent(newContent);
+      setMentionSuggestions([]);
+      setMentionStart(-1);
+      setMentionQuery("");
+      if (textareaRef.current) {
+        const newCursorPosition = mentionStart + user.username.length + 5;
+        textareaRef.current.focus();
+        textareaRef.current.setSelectionRange(
+          newCursorPosition,
+          newCursorPosition
+        );
+      }
     }
   };
 
@@ -157,16 +225,26 @@ export function CreateCommentForm({
           )}
         </Button>
       </div>
-      <Textarea
-        id="content"
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        placeholder={
-          replyToCommentId ? "Write your reply..." : "Write your comment..."
-        }
-        className="min-h-[100px] transition-all duration-200 focus:shadow-md"
-        required
-      />
+      <div className="relative">
+        <Textarea
+          id="content"
+          value={content}
+          onChange={handleContentChange}
+          placeholder={
+            replyToCommentId ? "Write your reply..." : "Write your comment..."
+          }
+          className="min-h-[100px] transition-all duration-200 focus:shadow-md"
+          required
+          ref={textareaRef}
+        />
+        {mentionSuggestions && mentionSuggestions.length > 0 && (
+          <UserMentionSuggestions
+            users={mentionSuggestions}
+            onSelect={handleMentionSelect}
+            onClose={() => setMentionSuggestions([])}
+          />
+        )}
+      </div>
 
       <div className="space-y-2">
         <div className="flex items-center gap-2">

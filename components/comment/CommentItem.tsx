@@ -19,6 +19,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
+import { PostData } from "@/model/PostData";
+import ReactMarkdown from "react-markdown";
 
 interface CommentItemProps {
   comment: Comment;
@@ -27,6 +29,7 @@ interface CommentItemProps {
   isHighlighted?: boolean;
   onCommentDeleted: (commentId: string) => void;
   handleExpiredToken: () => void;
+  post: PostData;
 }
 
 async function voteComment(
@@ -49,6 +52,7 @@ export function CommentItem({
   isHighlighted = false,
   onCommentDeleted,
   handleExpiredToken,
+  post,
 }: CommentItemProps) {
   const [isReplying, setIsReplying] = useState(false);
   const { toast } = useToast();
@@ -182,15 +186,15 @@ export function CommentItem({
 
   return (
     <motion.div
-      className={`space-y-4 ${isReply ? "ml-12" : ""}`}
+      className={`space-y-4 ${isReply ? "before: before:lef relative ml-12 before:absolute before:left-[-24px] before:top-0 before:h-full before:w-px before:bg-border" : ""}`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
       <Card
-        className={`p-4 ${isHighlighted ? "border-2 border-primary" : ""} transition-all duration-300 hover:shadow-md`}
+        className={`p-4 ${isHighlighted ? "border-2 border-primary" : ""} relative ${isReply ? "before:absolute before:left-[-24px] before:top-[20px] before:h-px before:w-[24px] before:bg-border" : ""} transition-all duration-300 hover:shadow-md`}
       >
-        <div className="flex gap-4">
+        <div className="flex gap-2 md:gap-4">
           <Link href={`/user/${comment.author.id}`}>
             <Avatar className="size-10">
               <AvatarImage
@@ -201,7 +205,7 @@ export function CommentItem({
               </AvatarFallback>
             </Avatar>
           </Link>
-          <div className="flex-1">
+          <div className="flex-1 overflow-x-hidden">
             <div className="mb-1 flex items-center gap-2">
               <span className="font-medium">{comment.author.username}</span>
               <span className="text-sm text-muted-foreground">
@@ -213,10 +217,8 @@ export function CommentItem({
                 ago
               </span>
             </div>
-            <div className="prose max-w-none px-1">
-              <p className="whitespace-pre-line break-words text-sm">
-                {comment.content}
-              </p>
+            <div className="prose markdown-content max-w-none">
+              <ReactMarkdown>{comment.content}</ReactMarkdown>
             </div>
             {comment.fileAttachments && comment.fileAttachments.length > 0 && (
               <div className="mt-4 grid grid-cols-2 gap-4">
@@ -236,7 +238,7 @@ export function CommentItem({
                 ))}
               </div>
             )}
-            <div className="mt-4 flex items-center gap-4">
+            <div className="mt-4 flex items-center gap-2 md:gap-4">
               <motion.button
                 className={`flex items-center gap-1 text-sm ${userVote === "up" ? "text-primary" : "text-muted-foreground"} transition-colors duration-200 hover:text-primary`}
                 onClick={() => handleVote("up")}
@@ -255,17 +257,15 @@ export function CommentItem({
                 <ThumbsDown className="size-4" />
                 {commentVote!.totalDownvotes}
               </motion.button>
-              {!isReply && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-sm text-muted-foreground transition-colors duration-200 hover:text-primary"
-                  onClick={() => setIsReplying(!isReplying)}
-                >
-                  <Reply className="mr-1 size-4" />
-                  Reply
-                </Button>
-              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-sm text-muted-foreground transition-colors duration-200 hover:text-primary"
+                onClick={() => setIsReplying(!isReplying)}
+              >
+                <Reply className="mr-1 size-4" />
+                Reply
+              </Button>
               {userDetails?.id === comment.author.id && (
                 <Button
                   variant="ghost"
@@ -274,7 +274,7 @@ export function CommentItem({
                   onClick={handleDeleteComment}
                 >
                   <Trash2 className="mr-1 size-4" />
-                  Del
+                  Delete
                 </Button>
               )}
             </div>
@@ -284,7 +284,7 @@ export function CommentItem({
 
       {isReplying && (
         <motion.div
-          className="ml-12"
+          className="relative ml-12 before:absolute before:left-[-24px] before:top-0 before:h-full before:w-px before:bg-border"
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           exit={{ opacity: 0, height: 0 }}
@@ -295,6 +295,9 @@ export function CommentItem({
             replyToCommentId={comment.id}
             onSuccess={handleReplySuccess}
             onCancel={() => setIsReplying(false)}
+            postTitle={post.title}
+            postContent={commentVote?.content}
+            initialMention={comment.author.username}
           />
         </motion.div>
       )}

@@ -7,7 +7,7 @@ import { LoginModal } from "@/components/modal/LoginModal";
 import { RegisterModal } from "@/components/modal/RegisterModal";
 import { NotificationsDropdown } from "@/components/notification/NotificationsDropdown";
 import { useAuth } from "@/contexts/AuthContext";
-import { Menu, X, User, Home, Clock } from "lucide-react";
+import { Menu, X, User, Home, Clock, LogOut } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ThemeToggle from "@/components/ThemeToggle";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface NavigationProps {
   className?: string;
@@ -55,22 +55,22 @@ export function Navigation({ className }: NavigationProps) {
         <div className="flex h-16 items-center justify-between">
           <Link
             href="/"
-            className="text-2xl font-bold text-primary transition-colors duration-200 hover:text-primary/80"
+            className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-2xl font-bold text-transparent transition-colors duration-200 hover:from-primary/80 hover:to-purple-500"
           >
             Z&#39;Forum
           </Link>
-          <div className="hidden items-center gap-6 md:flex">
+          <div className="hidden items-center space-x-4 md:flex">
             <div className="flex gap-4">
               <Button
                 variant="ghost"
-                className="lunar-new-year:hover:bg-red-800 text-foreground hover:bg-primary/10 hover:text-primary dark:hover:bg-gray-700"
+                className="lunar-new-year:hover:bg-red-800 text-foreground transition-colors duration-200 hover:bg-primary/10 hover:text-primary dark:hover:bg-gray-700"
               >
                 <Home className="mr-2 size-4" />
                 <Link href="/">Forums</Link>
               </Button>
               <Button
                 variant="ghost"
-                className="lunar-new-year:hover:bg-red-800 text-foreground hover:bg-primary/10 hover:text-primary dark:hover:bg-gray-700"
+                className="lunar-new-year:hover:bg-red-800 text-foreground transition-colors duration-200 hover:bg-primary/10 hover:text-primary dark:hover:bg-gray-700"
               >
                 <Clock className="mr-2 size-4" />
                 <Link href="/latest">Latest</Link>
@@ -152,93 +152,101 @@ export function Navigation({ className }: NavigationProps) {
           </Button>
         </div>
       </div>
-      {isMobileMenuOpen && (
-        <motion.div
-          className="container mx-auto px-4 pb-4 sm:px-6 md:hidden lg:px-8"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3 }}
-        >
-          <Button
-            variant="ghost"
-            className="lunar-new-year:hover:bg-red-800 mb-2 w-full text-foreground hover:bg-primary/10 hover:text-primary dark:hover:bg-gray-700"
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            className="bg-background/95 backdrop-blur-sm md:hidden lg:px-8"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
           >
-            <Home className="mr-2 size-4" />
-            <Link href="/">Forums</Link>
-          </Button>
-          <Button
-            variant="ghost"
-            className="lunar-new-year:hover:bg-red-800 mb-2 w-full text-foreground hover:bg-primary/10 hover:text-primary dark:hover:bg-gray-700"
-          >
-            <Clock className="mr-2 size-4" />
-            <Link href="/latest">Latests</Link>
-          </Button>
-          <div className="mb-2 flex justify-center">
-            <ThemeToggle />
-          </div>
-          {isLoggedIn ? (
-            <>
+            <div className="container mx-auto space-y-4 p-4">
+              <Button
+                variant="ghost"
+                className="lunar-new-year:hover:bg-red-800 w-full text-foreground hover:bg-primary/10 hover:text-primary dark:hover:bg-gray-700"
+              >
+                <Home className="mr-2 size-4" />
+                <Link href="/">Forums</Link>
+              </Button>
+
+              <Button
+                variant="ghost"
+                className="lunar-new-year:hover:bg-red-800 w-full text-foreground hover:bg-primary/10 hover:text-primary dark:hover:bg-gray-700"
+              >
+                <Clock className="mr-2 size-4" />
+                <Link href="/latest">Latests</Link>
+              </Button>
+
               <div className="mb-2 flex justify-center">
-                <NotificationsDropdown />
+                <ThemeToggle />
               </div>
-              <div className="mb-2 flex items-center justify-center gap-2">
-                <Avatar className="size-8">
-                  <AvatarImage
-                    src={userDetails?.picture}
-                    alt={userDetails?.username}
-                  />
-                  <AvatarFallback>
-                    {userDetails?.firstName?.[0]?.toUpperCase() ||
-                      userDetails?.username?.[0]?.toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="font-medium text-foreground">
-                  {userDetails?.username}
-                </span>
-              </div>
-              <Button
-                variant="outline"
-                className="lunar-new-year:hover:bg-red-800 mb-2 w-full border-primary text-foreground hover:bg-primary hover:text-primary-foreground dark:hover:bg-gray-700"
-                asChild
-              >
-                <Link href={`/user/${userDetails?.id}`}>View Profile</Link>
-              </Button>
-              <Button
-                variant="outline"
-                className="lunar-new-year:hover:bg-red-800 mb-2 w-full border-primary text-foreground hover:bg-primary hover:text-primary-foreground dark:hover:bg-gray-700"
-                asChild
-              >
-                <Link href="/profile/edit">Edit Profile</Link>
-              </Button>
-              <Button
-                variant="outline"
-                className="lunar-new-year:hover:bg-red-800 w-full border-primary text-foreground hover:bg-primary hover:text-primary-foreground dark:hover:bg-gray-700"
-                onClick={logout}
-              >
-                Đăng xuất
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button
-                variant="outline"
-                className="lunar-new-year:hover:bg-red-800 mb-2 w-full border-primary text-foreground hover:bg-primary hover:text-primary-foreground dark:hover:bg-gray-700"
-                onClick={() => setIsRegisterModalOpen(true)}
-              >
-                Đăng ký
-              </Button>
-              <Button
-                variant="outline"
-                className="lunar-new-year:hover:bg-red-800 w-full border-primary text-foreground hover:bg-primary hover:text-primary-foreground dark:hover:bg-gray-700"
-                onClick={() => setIsLoginModalOpen(true)}
-              >
-                Đăng nhập
-              </Button>
-            </>
-          )}
-        </motion.div>
-      )}
+
+              {isLoggedIn ? (
+                <>
+                  <div className="mb-2 flex justify-center">
+                    <NotificationsDropdown />
+                  </div>
+                  <div className="mb-2 flex items-center justify-center gap-2">
+                    <Avatar className="size-8">
+                      <AvatarImage
+                        src={userDetails?.picture}
+                        alt={userDetails?.username}
+                      />
+                      <AvatarFallback>
+                        {userDetails?.firstName?.[0]?.toUpperCase() ||
+                          userDetails?.username?.[0]?.toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="font-medium text-foreground">
+                      {userDetails?.username}
+                    </span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    className="lunar-new-year:hover:bg-red-800 mb-2 w-full border-primary text-foreground hover:bg-primary hover:text-primary-foreground dark:hover:bg-gray-700"
+                    asChild
+                  >
+                    <Link href={`/user/${userDetails?.id}`}>View Profile</Link>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="lunar-new-year:hover:bg-red-800 mb-2 w-full border-primary text-foreground hover:bg-primary hover:text-primary-foreground dark:hover:bg-gray-700"
+                    asChild
+                  >
+                    <Link href="/profile/edit">Edit Profile</Link>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="lunar-new-year:hover:bg-red-800 w-full border-primary text-foreground hover:bg-primary hover:text-primary-foreground dark:hover:bg-gray-700"
+                    onClick={logout}
+                  >
+                    Đăng xuất
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="ghost"
+                    className="lunar-new-year:hover:bg-red-800 mb-2 w-full border-primary text-foreground hover:bg-primary hover:text-primary-foreground dark:hover:bg-gray-700"
+                    onClick={() => setIsRegisterModalOpen(true)}
+                  >
+                    Đăng ký
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="lunar-new-year:hover:bg-red-800 w-full border-primary text-foreground hover:bg-primary hover:text-primary-foreground dark:hover:bg-gray-700"
+                    onClick={() => setIsLoginModalOpen(true)}
+                  >
+                    Đăng nhập
+                  </Button>
+                </>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <LoginModal
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}

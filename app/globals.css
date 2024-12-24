@@ -119,11 +119,18 @@
 
 .prose pre {
   @apply bg-muted text-muted-foreground;
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .prose code {
   @apply text-primary bg-muted px-1 py-0.5 rounded;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
+
 
 .prose a {
   @apply text-primary hover:text-primary/80 transition-colors duration-200;
@@ -268,4 +275,18 @@ main {
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
   }
+}
+
+.markdown-content pre {
+  @apply my-4 p-4 bg-muted rounded-lg;
+  overflow-x: auto;
+  max-width: 100%;
+}
+.markdown-content pre > code {
+  @apply block;
+  white-space: pre;
+  overflow-x: auto;
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
 }

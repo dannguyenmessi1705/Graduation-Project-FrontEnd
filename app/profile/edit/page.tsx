@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { getUserDetails, updateUserProfile } from "@/lib/api";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Loading } from "@/components/Loading";
 
 export default function EditProfilePage() {
   const { userDetails: authUserDetails } = useAuth();
@@ -33,12 +34,14 @@ export default function EditProfilePage() {
   });
   const [picture, setPicture] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const router = useRouter();
 
   useEffect(() => {
     const fetchUserDetails = async () => {
       if (authUserDetails?.id) {
+        setIsLoading(true);
         try {
           const details = await getUserDetails(authUserDetails.id);
           setFormData({
@@ -62,6 +65,8 @@ export default function EditProfilePage() {
             description: "Failed to load user details. Please try again.",
             variant: "destructive",
           });
+        } finally {
+          setIsLoading(false);
         }
       }
     };
@@ -114,6 +119,14 @@ export default function EditProfilePage() {
       });
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loading size={40} color="primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">

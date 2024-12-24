@@ -21,6 +21,7 @@ import { EditPostModal } from "@/components/modal/EditPostModal";
 import { Button } from "@/components/ui/button";
 import { AnimatePresence, motion } from "framer-motion";
 import { Loading } from "@/components/Loading";
+import ReactMarkdown from "react-markdown";
 
 type PostDetail = {
   status: ResponseStatus | null;
@@ -205,15 +206,15 @@ export default function PostPage() {
         });
       }
     }
-
-    if (isLoading) {
-      return (
-        <div className="flex h-screen items-center justify-center">
-          <Loading size={40} color="primary" />
-        </div>
-      );
-    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loading size={40} color="primary" />
+      </div>
+    );
+  }
 
   const handleCommentPosted = async () => {
     // Refresh comments
@@ -282,18 +283,23 @@ export default function PostPage() {
     }
   };
 
-  if (!post)
-    return (
-      <motion.div
-        className="flex h-64 items-center justify-center"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <Loading size={40} color="primary" />
-      </motion.div>
-    );
+  if (!post) {
+    if (isLoading) {
+      return (
+        <motion.div
+          className="flex h-64 items-center justify-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Loading size={40} color="primary" />
+        </motion.div>
+      );
+    } else {
+      return <div>Post not found</div>;
+    }
+  }
 
   return (
     <motion.div
@@ -366,10 +372,8 @@ export default function PostPage() {
                   ago
                 </span>
               </div>
-              <div className="prose max-w-none">
-                <p className="whitespace-pre-line break-words">
-                  {post.content}
-                </p>
+              <div className="prose markdown-content max-w-none">
+                <ReactMarkdown>{post.content}</ReactMarkdown>
                 {post.fileAttachments.map((file, index) => (
                   <div
                     key={index}
@@ -473,6 +477,7 @@ export default function PostPage() {
                           isHighlighted={comment.id === highlightedCommentId}
                           onCommentDeleted={handleCommentDeleted}
                           handleExpiredToken={handleExpiredToken}
+                          post={post}
                         />
                         {comments
                           .filter(
@@ -487,6 +492,7 @@ export default function PostPage() {
                               isHighlighted={reply.id === highlightedCommentId}
                               onCommentDeleted={handleCommentDeleted}
                               handleExpiredToken={handleExpiredToken}
+                              post={post}
                             />
                           ))}
                       </motion.div>

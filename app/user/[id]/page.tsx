@@ -6,26 +6,35 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getUserDetails } from "@/lib/api";
 import { UserDetails } from "@/model/UserData";
+import { Loading } from "@/components/Loading";
 
 export default function Page() {
   const { id } = useParams();
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
+      setIsLoading(true);
       try {
         const profile = await getUserDetails(id as string);
         setUserDetails(profile.data);
       } catch (error) {
         console.error("Failed to fetch user profile:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchUserProfile();
   }, [id]);
 
-  if (!userDetails) {
-    return <div className="container mx-auto px-4 py-8">Loading...</div>;
+  if (!userDetails || isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loading size={40} color="primary" />
+      </div>
+    );
   }
 
   return (
