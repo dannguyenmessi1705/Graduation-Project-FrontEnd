@@ -12,7 +12,10 @@ import { getJwtToken } from "@/lib/auth";
 import { AnimatePresence, motion } from "framer-motion";
 import { Loading } from "@/components/Loading";
 import { UserDetails as User } from "@/model/UserData";
+import { CommentData as Comment } from "@/model/PostDetailData";
 import { UserMentionSuggestions } from "@/components/comment/UserMentionSuggestions";
+import { Card } from "@/components/ui/card";
+import Link from "next/link";
 
 interface CreateCommentFormProps {
   postId: string;
@@ -23,6 +26,7 @@ interface CreateCommentFormProps {
   postTitle?: string;
   postContent?: string;
   initialMention?: string;
+  parentComment?: Comment | null;
 }
 
 export function CreateCommentForm({
@@ -34,6 +38,7 @@ export function CreateCommentForm({
   postTitle = "",
   postContent = "",
   initialMention = "",
+  parentComment = null,
 }: CreateCommentFormProps) {
   const [content, setContent] = useState(
     initialMention ? `**@${initialMention}** ` : ""
@@ -206,6 +211,23 @@ export function CreateCommentForm({
 
   return (
     <form onSubmit={handleSubmit} className={`space-y-4 ${className}`}>
+      {parentComment && (
+        <Card className="bg-muted/50 p-4">
+          <div className="text-sm text-muted-foreground">
+            Replying to{" "}
+            <Link
+              href={`/user/${parentComment.author.id}`}
+              className="text-primary hover:underline"
+            >
+              @{parentComment.author.username}
+            </Link>
+            :
+          </div>
+          <div className="mt-2 line-clamp-2 text-sm">
+            {parentComment.content}
+          </div>
+        </Card>
+      )}
       <div className="flex items-center justify-between">
         <Label htmlFor="content">Your Comment</Label>
         <Button

@@ -21,6 +21,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
 import { PostData } from "@/model/PostData";
 import ReactMarkdown from "react-markdown";
+import { UserDetails } from "@/model/UserData";
 
 interface CommentItemProps {
   comment: Comment;
@@ -30,6 +31,7 @@ interface CommentItemProps {
   onCommentDeleted: (commentId: string) => void;
   handleExpiredToken: () => void;
   post: PostData;
+  parentComment: Comment | null;
 }
 
 async function voteComment(
@@ -53,6 +55,7 @@ export function CommentItem({
   onCommentDeleted,
   handleExpiredToken,
   post,
+  parentComment,
 }: CommentItemProps) {
   const [isReplying, setIsReplying] = useState(false);
   const { toast } = useToast();
@@ -76,7 +79,7 @@ export function CommentItem({
       }
     };
     fetchUserDetails();
-  }, [comment.author.id]);
+  }, [comment.author.id, comment.replyToCommentId, parentComment?.author.id]);
 
   const handleVote = async (voteType: "up" | "down") => {
     if (!comment) return;
@@ -194,6 +197,20 @@ export function CommentItem({
       <Card
         className={`p-4 ${isHighlighted ? "border-2 border-primary" : ""} relative ${isReply ? "before:absolute before:left-[-24px] before:top-[20px] before:h-px before:w-[24px] before:bg-border" : ""} transition-all duration-300 hover:shadow-md`}
       >
+        {comment.replyToCommentId && parentComment && (
+          <div className="mb-3 text-sm text-muted-foreground">
+            Replying to{" "}
+            <Link
+              href={`/user/${parentComment.author.id}`}
+              className="text-primary hover:underline"
+            >
+              @{parentComment.author.username}
+            </Link>
+            <div className="mt-1 line-clamp-1 border-l-2 border-muted pl-4 text-muted-foreground">
+              {parentComment.content}
+            </div>
+          </div>
+        )}
         <div className="flex gap-2 md:gap-4">
           <Link href={`/user/${comment.author.id}`}>
             <Avatar className="size-10">
@@ -298,6 +315,7 @@ export function CommentItem({
             postTitle={post.title}
             postContent={commentVote?.content}
             initialMention={comment.author.username}
+            parentComment={comment}
           />
         </motion.div>
       )}

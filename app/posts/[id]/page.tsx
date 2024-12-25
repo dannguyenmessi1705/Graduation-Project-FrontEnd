@@ -163,11 +163,11 @@ export default function PostPage() {
                 ? prevPost.totalDownvotes + 1
                 : prevPost.totalDownvotes,
           };
-          setUserVote(voteType);
-          toast({
-            title: "Vote successful",
-            description: `You have ${voteType} voted this thread.`,
-          });
+        });
+        setUserVote(voteType);
+        toast({
+          title: "Vote successful",
+          description: `You have ${voteType} voted this thread.`,
         });
       }
     } catch (error) {
@@ -281,6 +281,83 @@ export default function PostPage() {
         totalComments: prevPost!.totalComments - 1,
       }));
     }
+  };
+
+  const organizeComments = (comments: CommentData[]) => {
+    const commentMap = new Map<
+      string,
+      CommentData & { replies: CommentData[] }
+    >();
+    const rootComments: (CommentData & { replies: CommentData[] })[] = [];
+
+    comments.forEach((comment) => {
+      commentMap.set(comment.id, { ...comment, replies: [] });
+    });
+
+    comments.forEach((comment) => {
+      const enhancedComment = commentMap.get(comment.id)!;
+      if (
+        comment.replyToCommentId &&
+        commentMap.has(comment.replyToCommentId)
+      ) {
+        const parentComment = commentMap.get(comment.replyToCommentId)!;
+        parentComment.replies.push(enhancedComment);
+      } else {
+        rootComments.push(enhancedComment);
+      }
+    });
+
+    return rootComments;
+  };
+
+  const renderCommentTree = (
+    comment: CommentData & { replies: CommentData[] },
+    highlightedCommentId: string | null,
+    onCommentPosted: () => void,
+    onCommentDeleted: (commentId: string) => void,
+    handleExpiredToken: () => void,
+    post: PostDetailData,
+    parentComment: CommentData | null = null
+  ) => {
+    const isReply = !!parentComment;
+
+    return (
+      <motion.div
+        key={comment.id}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.3 }}
+      >
+        <CommentItem
+          comment={comment}
+          onCommentPosted={onCommentPosted}
+          isHighlighted={comment.id === highlightedCommentId}
+          onCommentDeleted={onCommentDeleted}
+          handleExpiredToken={handleExpiredToken}
+          post={post}
+          parentComment={parentComment}
+          isReply={isReply}
+        />
+        {comment.replies && comment.replies.length > 0 && (
+          <div className="space-y-4">
+            {comment.replies.map((reply) =>
+              renderCommentTree(
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-expect-error
+                reply,
+                highlightedCommentId,
+                onCommentPosted,
+                onCommentDeleted,
+                handleExpiredToken,
+                post,
+                comment
+              )
+            )}
+          </div>
+        )}
+      </motion.div>
+    );
   };
 
   if (!post) {
@@ -456,49 +533,20 @@ export default function PostPage() {
 
           <div className="space-y-4">
             <AnimatePresence>
-              {comments && comments.length !== 0
-                ? comments.map((comment) =>
-                    comment.replyToCommentId === null ? (
-                      <motion.div
-                        key={comment.id}
-                        ref={
-                          comment.id === highlightedCommentId
-                            ? highlightedCommentRef
-                            : null
-                        }
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <CommentItem
-                          comment={comment}
-                          onCommentPosted={handleCommentPosted}
-                          isHighlighted={comment.id === highlightedCommentId}
-                          onCommentDeleted={handleCommentDeleted}
-                          handleExpiredToken={handleExpiredToken}
-                          post={post}
-                        />
-                        {comments
-                          .filter(
-                            (reply) => reply.replyToCommentId === comment.id
-                          )
-                          .map((reply) => (
-                            <CommentItem
-                              key={reply.id}
-                              comment={reply}
-                              onCommentPosted={handleCommentPosted}
-                              isReply
-                              isHighlighted={reply.id === highlightedCommentId}
-                              onCommentDeleted={handleCommentDeleted}
-                              handleExpiredToken={handleExpiredToken}
-                              post={post}
-                            />
-                          ))}
-                      </motion.div>
-                    ) : null
+              {comments && comments.length > 0 ? (
+                organizeComments(comments).map((comment) =>
+                  renderCommentTree(
+                    comment,
+                    highlightedCommentId,
+                    handleCommentPosted,
+                    handleCommentDeleted,
+                    handleExpiredToken,
+                    post
                   )
-                : null}
+                )
+              ) : (
+                <p>No comment yet.</p>
+              )}
             </AnimatePresence>
           </div>
         </motion.div>
