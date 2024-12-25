@@ -21,11 +21,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
 import { PostData } from "@/model/PostData";
 import ReactMarkdown from "react-markdown";
-import { UserDetails } from "@/model/UserData";
 
 interface CommentItemProps {
   comment: Comment;
-  isReply?: boolean;
   onCommentPosted?: () => void;
   isHighlighted?: boolean;
   onCommentDeleted: (commentId: string) => void;
@@ -49,7 +47,6 @@ async function voteComment(
 
 export function CommentItem({
   comment,
-  isReply = false,
   onCommentPosted,
   isHighlighted = false,
   onCommentDeleted,
@@ -189,15 +186,17 @@ export function CommentItem({
 
   return (
     <motion.div
-      className={`space-y-4 ${isReply ? "before: before:lef relative ml-12 before:absolute before:left-[-24px] before:top-0 before:h-full before:w-px before:bg-border" : ""}`}
+      className={`space-y-4`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
       <Card
-        className={`p-4 ${isHighlighted ? "border-2 border-primary" : ""} relative ${isReply ? "before:absolute before:left-[-24px] before:top-[20px] before:h-px before:w-[24px] before:bg-border" : ""} transition-all duration-300 hover:shadow-md`}
+        className={`p-4 ${
+          isHighlighted ? "border-2 border-primary" : ""
+        } relative transition-all duration-300 hover:shadow-md`}
       >
-        {comment.replyToCommentId && parentComment && (
+        {parentComment && (
           <div className="mb-3 text-sm text-muted-foreground">
             Replying to{" "}
             <Link
@@ -211,7 +210,8 @@ export function CommentItem({
             </div>
           </div>
         )}
-        <div className="flex gap-2 md:gap-4">
+
+        <div className="flex gap-4">
           <Link href={`/user/${comment.author.id}`}>
             <Avatar className="size-10">
               <AvatarImage
@@ -222,7 +222,7 @@ export function CommentItem({
               </AvatarFallback>
             </Avatar>
           </Link>
-          <div className="flex-1 overflow-x-hidden">
+          <div className="flex-1">
             <div className="mb-1 flex items-center gap-2">
               <span className="font-medium">{comment.author.username}</span>
               <span className="text-sm text-muted-foreground">
@@ -234,7 +234,7 @@ export function CommentItem({
                 ago
               </span>
             </div>
-            <div className="prose markdown-content max-w-none">
+            <div className="prose markdown-content max-w-none px-1">
               <ReactMarkdown>{comment.content}</ReactMarkdown>
             </div>
             {comment.fileAttachments && comment.fileAttachments.length > 0 && (
@@ -255,7 +255,7 @@ export function CommentItem({
                 ))}
               </div>
             )}
-            <div className="mt-4 flex items-center gap-2 md:gap-4">
+            <div className="mt-4 flex items-center gap-4">
               <motion.button
                 className={`flex items-center gap-1 text-sm ${userVote === "up" ? "text-primary" : "text-muted-foreground"} transition-colors duration-200 hover:text-primary`}
                 onClick={() => handleVote("up")}
@@ -291,7 +291,7 @@ export function CommentItem({
                   onClick={handleDeleteComment}
                 >
                   <Trash2 className="mr-1 size-4" />
-                  Delete
+                  Del
                 </Button>
               )}
             </div>
@@ -301,7 +301,7 @@ export function CommentItem({
 
       {isReplying && (
         <motion.div
-          className="relative ml-12 before:absolute before:left-[-24px] before:top-0 before:h-full before:w-px before:bg-border"
+          className={`relative ml-12 before:absolute before:left-[-24px] before:top-0 before:h-full before:w-px before:bg-border`}
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           exit={{ opacity: 0, height: 0 }}

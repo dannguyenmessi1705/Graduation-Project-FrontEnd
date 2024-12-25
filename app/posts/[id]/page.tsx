@@ -283,45 +283,15 @@ export default function PostPage() {
     }
   };
 
-  const organizeComments = (comments: CommentData[]) => {
-    const commentMap = new Map<
-      string,
-      CommentData & { replies: CommentData[] }
-    >();
-    const rootComments: (CommentData & { replies: CommentData[] })[] = [];
-
-    comments.forEach((comment) => {
-      commentMap.set(comment.id, { ...comment, replies: [] });
-    });
-
-    comments.forEach((comment) => {
-      const enhancedComment = commentMap.get(comment.id)!;
-      if (
-        comment.replyToCommentId &&
-        commentMap.has(comment.replyToCommentId)
-      ) {
-        const parentComment = commentMap.get(comment.replyToCommentId)!;
-        parentComment.replies.push(enhancedComment);
-      } else {
-        rootComments.push(enhancedComment);
-      }
-    });
-
-    return rootComments;
-  };
-
-  const renderCommentTree = (
-    comment: CommentData & { replies: CommentData[] },
+  const renderComments = (
+    comments: CommentData[],
     highlightedCommentId: string | null,
     onCommentPosted: () => void,
     onCommentDeleted: (commentId: string) => void,
     handleExpiredToken: () => void,
-    post: PostDetailData,
-    parentComment: CommentData | null = null
+    post: PostDetailData
   ) => {
-    const isReply = !!parentComment;
-
-    return (
+    return comments.map((comment) => (
       <motion.div
         key={comment.id}
         initial={{ opacity: 0, y: 20 }}
@@ -336,28 +306,12 @@ export default function PostPage() {
           onCommentDeleted={onCommentDeleted}
           handleExpiredToken={handleExpiredToken}
           post={post}
-          parentComment={parentComment}
-          isReply={isReply}
+          parentComment={
+            comments.find((c) => c.id === comment.replyToCommentId) || null
+          }
         />
-        {comment.replies && comment.replies.length > 0 && (
-          <div className="space-y-4">
-            {comment.replies.map((reply) =>
-              renderCommentTree(
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-expect-error
-                reply,
-                highlightedCommentId,
-                onCommentPosted,
-                onCommentDeleted,
-                handleExpiredToken,
-                post,
-                comment
-              )
-            )}
-          </div>
-        )}
       </motion.div>
-    );
+    ));
   };
 
   if (!post) {
@@ -534,15 +488,13 @@ export default function PostPage() {
           <div className="space-y-4">
             <AnimatePresence>
               {comments && comments.length > 0 ? (
-                organizeComments(comments).map((comment) =>
-                  renderCommentTree(
-                    comment,
-                    highlightedCommentId,
-                    handleCommentPosted,
-                    handleCommentDeleted,
-                    handleExpiredToken,
-                    post
-                  )
+                renderComments(
+                  comments,
+                  highlightedCommentId,
+                  handleCommentPosted,
+                  handleCommentDeleted,
+                  handleExpiredToken,
+                  post
                 )
               ) : (
                 <p>No comment yet.</p>
