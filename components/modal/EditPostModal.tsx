@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { X, Upload, Loader2 } from "lucide-react";
+import { X, Upload, Loader2, FileIcon } from "lucide-react";
 import Image from "next/image";
 import { updatePost } from "@/lib/api";
 import { motion, AnimatePresence } from "framer-motion";
@@ -26,6 +26,24 @@ interface EditPostModalProps {
   initialFiles: string[];
   onSuccess: () => void;
 }
+
+const isImageFile = (fileName: string): boolean => {
+  return /\.(jpeg|jpg|gif|png|webp|svg)/i.test(fileName);
+};
+
+const isVideoFile = (fileName: string): string | null => {
+  if (/\.(mp4)/i.test(fileName)) {
+    return "mp4";
+  } else if (/\.(webm)/i.test(fileName)) {
+    return "webm";
+  } else if (/\.(ogg)/i.test(fileName)) {
+    return "ogg";
+  } else if (/\.(mov)/i.test(fileName)) {
+    return "mov";
+  } else if (/\.(avi)/i.test(fileName)) {
+    return "avi";
+  } else return null;
+};
 
 export function EditPostModal({
   isOpen,
@@ -89,6 +107,89 @@ export function EditPostModal({
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const renderFileAttachment = (file: string, index: number) => {
+    const fileUrl = decodeURIComponent(file);
+    const typeVideo = isVideoFile(fileUrl);
+
+    if (isImageFile(fileUrl)) {
+      return (
+        <div
+          key={index}
+          className="relative aspect-video overflow-hidden rounded-lg border"
+        >
+          <Image
+            src={fileUrl}
+            alt={`Attachment ${index + 1}`}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          />
+        </div>
+      );
+    } else if (typeVideo !== null) {
+      return (
+        <div
+          key={index}
+          className="relative aspect-video overflow-hidden rounded-lg border"
+        >
+          <video controls className="size-full">
+            <source src={fileUrl} type={`video/${typeVideo}`} />
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      );
+    } else {
+      return (
+        <a
+          key={index}
+          href={fileUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center rounded-lg bg-muted p-2 transition-colors hover:bg-muted/80"
+        >
+          <FileIcon className="mr-2 size-8 text-primary" />
+          <span className="text-sm text-foreground">{fileUrl}</span>
+        </a>
+      );
+    }
+  };
+  const renderFilePreview = (file: File, index: number) => {
+    if (isImageFile(file.name)) {
+      return (
+        <div
+          key={index}
+          className="relative aspect-video overflow-hidden rounded-lg border"
+        >
+          <Image
+            src={URL.createObjectURL(file)}
+            alt={file.name}
+            fill
+            className="object-cover"
+          />
+        </div>
+      );
+    } else if (isVideoFile(file.name)) {
+      return (
+        <div
+          key={index}
+          className="relative aspect-video overflow-hidden rounded-lg border"
+        >
+          <video controls className="size-full">
+            <source src={URL.createObjectURL(file)} type={file.type} />
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      );
+    } else {
+      return (
+        <div key={index} className="flex items-center rounded-lg bg-muted p-2">
+          <FileIcon className="mr-2 size-8 text-primary" />
+          <span className="text-sm text-foreground">{file.name}</span>
+        </div>
+      );
     }
   };
 
@@ -166,14 +267,8 @@ export function EditPostModal({
                       exit={{ opacity: 0, scale: 0.8 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <div className="relative aspect-video overflow-hidden rounded-lg border">
-                        <Image
-                          src={decodeURIComponent(file)}
-                          alt={`Existing Attachment ${index + 1}`}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
+                      {renderFileAttachment(file, index)}
+
                       <motion.button
                         type="button"
                         onClick={() => removeExistingFile(index)}
@@ -204,14 +299,7 @@ export function EditPostModal({
                       exit={{ opacity: 0, scale: 0.8 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <div className="relative aspect-video overflow-hidden rounded-lg border">
-                        <Image
-                          src={URL.createObjectURL(file)}
-                          alt={file.name}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
+                      {renderFilePreview(file, index)}
                       <motion.button
                         type="button"
                         onClick={() => removeFile(index)}

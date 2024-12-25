@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { X, Upload, Loader2, Sparkles } from "lucide-react";
+import { X, Upload, Loader2, Sparkles, FileIcon } from "lucide-react";
 import Image from "next/image";
 import { getJwtToken } from "@/lib/auth";
 import type { PostData } from "@/model/PostData";
@@ -26,6 +26,24 @@ interface CreatePostModalProps {
   onSuccess: (newPost: PostData) => void;
   topicName?: string;
 }
+
+const isImageFile = (fileName: string): boolean => {
+  return /\.(jpeg|jpg|gif|png|webp|svg)/i.test(fileName);
+};
+
+const isVideoFile = (fileName: string): string | null => {
+  if (/\.(mp4)/i.test(fileName)) {
+    return "mp4";
+  } else if (/\.(webm)/i.test(fileName)) {
+    return "webm";
+  } else if (/\.(ogg)/i.test(fileName)) {
+    return "ogg";
+  } else if (/\.(mov)/i.test(fileName)) {
+    return "mov";
+  } else if (/\.(avi)/i.test(fileName)) {
+    return "avi";
+  } else return null;
+};
 
 export function CreatePostModal({
   isOpen,
@@ -140,6 +158,43 @@ export function CreatePostModal({
     }
   };
 
+  const renderFilePreview = (file: File, index: number) => {
+    if (isImageFile(file.name)) {
+      return (
+        <div
+          key={index}
+          className="relative aspect-video overflow-hidden rounded-lg border"
+        >
+          <Image
+            src={URL.createObjectURL(file)}
+            alt={file.name}
+            fill
+            className="object-cover"
+          />
+        </div>
+      );
+    } else if (isVideoFile(file.name)) {
+      return (
+        <div
+          key={index}
+          className="relative aspect-video overflow-hidden rounded-lg border"
+        >
+          <video controls className="size-full">
+            <source src={URL.createObjectURL(file)} type={file.type} />
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      );
+    } else {
+      return (
+        <div key={index} className="flex items-center rounded-lg bg-muted p-2">
+          <FileIcon className="mr-2 size-8 text-primary" />
+          <span className="text-sm text-foreground">{file.name}</span>
+        </div>
+      );
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[600px]">
@@ -201,7 +256,7 @@ export function CreatePostModal({
                 onChange={handleFileChange}
                 className="hidden"
                 multiple
-                accept="image/*"
+                // accept="image/*"
               />
               <Label
                 htmlFor="files"
@@ -232,18 +287,11 @@ export function CreatePostModal({
                       exit={{ opacity: 0, scale: 0.8 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <div className="relative aspect-video overflow-hidden rounded-lg border">
-                        <Image
-                          src={URL.createObjectURL(file)}
-                          alt={file.name}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
+                      {renderFilePreview(file, index)}
                       <motion.button
                         type="button"
                         onClick={() => removeFile(index)}
-                        className="absolute right-2 top-2 rounded-full bg-background/80 p-1 transition-colors duration-200 hover:bg-background"
+                        className="absolute right-2 top-2 rounded-full bg-background/80 p-1 text-foreground transition-colors duration-200 hover:bg-background"
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
                       >

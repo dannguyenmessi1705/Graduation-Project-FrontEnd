@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { CommentItem } from "@/components/comment/CommentItem";
-import { ThumbsUp, ThumbsDown, MessageSquare } from "lucide-react";
+import { ThumbsUp, ThumbsDown, MessageSquare, FileIcon } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useTopicContext } from "@/contexts/TopicContext";
 import type { PostDetailData, CommentData } from "@/model/PostDetailData";
@@ -74,6 +74,24 @@ const fetchData = async (postId: string) => {
     console.error("Failed to fetch thread data:", error);
     throw error;
   }
+};
+
+const isImageFile = (fileName: string): boolean => {
+  return /\.(jpeg|jpg|gif|png|webp|svg)/i.test(fileName);
+};
+
+const isVideoFile = (fileName: string): string | null => {
+  if (/\.(mp4)/i.test(fileName)) {
+    return "mp4";
+  } else if (/\.(webm)/i.test(fileName)) {
+    return "webm";
+  } else if (/\.(ogg)/i.test(fileName)) {
+    return "ogg";
+  } else if (/\.(mov)/i.test(fileName)) {
+    return "mov";
+  } else if (/\.(avi)/i.test(fileName)) {
+    return "avi";
+  } else return null;
 };
 
 export default function PostPage() {
@@ -332,6 +350,53 @@ export default function PostPage() {
     }
   }
 
+  const renderFileAttachment = (file: string, index: number) => {
+    const fileUrl = decodeURIComponent(file);
+    const typeVideo = isVideoFile(fileUrl);
+
+    if (isImageFile(fileUrl)) {
+      return (
+        <div
+          key={index}
+          className="relative mt-4 aspect-video overflow-hidden rounded-lg"
+        >
+          <Image
+            src={fileUrl}
+            alt={`Attachment ${index + 1}`}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          />
+        </div>
+      );
+    } else if (typeVideo !== null) {
+      return (
+        <div
+          key={index}
+          className="relative aspect-video overflow-hidden rounded-lg border"
+        >
+          <video controls className="size-full">
+            <source src={fileUrl} type={`video/${typeVideo}`} />
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      );
+    } else {
+      return (
+        <a
+          key={index}
+          href={fileUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center rounded-lg bg-muted p-2 transition-colors hover:bg-muted/80"
+        >
+          <FileIcon className="mr-2 size-8 text-primary" />
+          <span className="text-sm text-foreground">{fileUrl}</span>
+        </a>
+      );
+    }
+  };
+
   return (
     <motion.div
       className="container mx-auto p-4 md:p-8 lg:px-16 xl:px-24"
@@ -405,20 +470,9 @@ export default function PostPage() {
               </div>
               <div className="prose markdown-content max-w-none">
                 <ReactMarkdown>{post.content}</ReactMarkdown>
-                {post.fileAttachments.map((file, index) => (
-                  <div
-                    key={index}
-                    className="relative mt-4 aspect-video overflow-hidden rounded-lg"
-                  >
-                    <Image
-                      src={decodeURIComponent(file)}
-                      alt={`Attachment ${index + 1}`}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    />
-                  </div>
-                ))}
+                {post.fileAttachments.map((file, index) =>
+                  renderFileAttachment(file, index)
+                )}
               </div>
               <div className="mt-4 flex items-center gap-4">
                 <motion.button
@@ -487,18 +541,16 @@ export default function PostPage() {
 
           <div className="space-y-4">
             <AnimatePresence>
-              {comments && comments.length > 0 ? (
-                renderComments(
-                  comments,
-                  highlightedCommentId,
-                  handleCommentPosted,
-                  handleCommentDeleted,
-                  handleExpiredToken,
-                  post
-                )
-              ) : (
-                <p>No comment yet.</p>
-              )}
+              {comments && comments.length > 0
+                ? renderComments(
+                    comments,
+                    highlightedCommentId,
+                    handleCommentPosted,
+                    handleCommentDeleted,
+                    handleExpiredToken,
+                    post
+                  )
+                : null}
             </AnimatePresence>
           </div>
         </motion.div>

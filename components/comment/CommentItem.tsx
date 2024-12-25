@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
-import { ThumbsUp, ThumbsDown, Reply, Trash2 } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Reply, Trash2, FileIcon } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { CommentData as Comment } from "@/model/PostDetailData";
 import { CreateCommentForm } from "../modal/CreateCommentForm";
@@ -44,6 +44,24 @@ async function voteComment(
     true
   );
 }
+
+const isImageFile = (fileName: string): boolean => {
+  return /\.(jpeg|jpg|gif|png|webp|svg)/i.test(fileName);
+};
+
+const isVideoFile = (fileName: string): string | null => {
+  if (/\.(mp4)/i.test(fileName)) {
+    return "mp4";
+  } else if (/\.(webm)/i.test(fileName)) {
+    return "webm";
+  } else if (/\.(ogg)/i.test(fileName)) {
+    return "ogg";
+  } else if (/\.(mov)/i.test(fileName)) {
+    return "mov";
+  } else if (/\.(avi)/i.test(fileName)) {
+    return "avi";
+  } else return null;
+};
 
 export function CommentItem({
   comment,
@@ -184,6 +202,53 @@ export function CommentItem({
     }
   };
 
+  const renderFileAttachment = (file: string, index: number) => {
+    const fileUrl = decodeURIComponent(file);
+    const typeVideo = isVideoFile(fileUrl);
+
+    if (isImageFile(fileUrl)) {
+      return (
+        <div
+          key={index}
+          className="relative aspect-video overflow-hidden rounded-lg border"
+        >
+          <Image
+            src={fileUrl}
+            alt={`Attachment ${index + 1}`}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          />
+        </div>
+      );
+    } else if (typeVideo !== null) {
+      return (
+        <div
+          key={index}
+          className="relative aspect-video overflow-hidden rounded-lg border"
+        >
+          <video controls className="size-full">
+            <source src={fileUrl} type={`video/${typeVideo}`} />
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      );
+    } else {
+      return (
+        <a
+          key={index}
+          href={fileUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center rounded-lg bg-muted p-2 transition-colors hover:bg-muted/80"
+        >
+          <FileIcon className="mr-2 size-8 text-primary" />
+          <span className="text-sm text-foreground">{fileUrl}</span>
+        </a>
+      );
+    }
+  };
+
   return (
     <motion.div
       className={`space-y-4`}
@@ -238,21 +303,10 @@ export function CommentItem({
               <ReactMarkdown>{comment.content}</ReactMarkdown>
             </div>
             {comment.fileAttachments && comment.fileAttachments.length > 0 && (
-              <div className="mt-4 grid grid-cols-2 gap-4">
-                {comment.fileAttachments.map((file, index) => (
-                  <div
-                    key={index}
-                    className="relative aspect-video overflow-hidden rounded-lg border"
-                  >
-                    <Image
-                      src={decodeURIComponent(file)}
-                      alt={`Attachment ${index + 1}`}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    />
-                  </div>
-                ))}
+              <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {comment.fileAttachments.map((file, index) =>
+                  renderFileAttachment(file, index)
+                )}
               </div>
             )}
             <div className="mt-4 flex items-center gap-4">
